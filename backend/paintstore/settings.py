@@ -41,6 +41,7 @@ INSTALLED_APPS = [
     # third-party
     'rest_framework',
     'corsheaders',
+    'drf_spectacular',
 
     # local apps
     'products',
@@ -139,6 +140,7 @@ REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.AllowAny',
     ],
+    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
 }
 
 from datetime import timedelta
@@ -148,4 +150,12 @@ SIMPLE_JWT = {
     'REFRESH_TOKEN_LIFETIME': timedelta(days=7),
     'ROTATE_REFRESH_TOKENS': True,
     'BLACKLIST_AFTER_ROTATION': True,
+}
+
+# Внизу — настройки spectacular (можно оставить по умолчанию):
+SPECTACULAR_SETTINGS = {
+    'TITLE': 'Paint Store API',
+    'DESCRIPTION': 'API интернет-магазина лакокрасочных материалов',
+    'VERSION': '1.0.0',
+    'SERVE_INCLUDE_SCHEMA': False,  # не включать schema в /api/schema/ (для безопасности)
 }

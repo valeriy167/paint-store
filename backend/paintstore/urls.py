@@ -20,6 +20,7 @@ from rest_framework import routers
 from products.views import ProductViewSet
 from reviews.views import ReviewViewSet
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
+from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
 
 # Router для ViewSets
 router = routers.DefaultRouter()
@@ -33,4 +34,6 @@ urlpatterns = [
     path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
     path('api/contacts/', include('contacts.urls')),  # → создадим contacts/urls.py
     path('api/profile/', include('accounts.urls')),   # → accounts/urls.py
+    path('api/schema/', SpectacularAPIView.as_view(), name='schema'),
+    path('api/schema/swagger/', SpectacularSwaggerView.as_view(url_name='schema'), name='swagger-ui'),
 ]
