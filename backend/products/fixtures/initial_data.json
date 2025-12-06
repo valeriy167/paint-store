@@ -1,0 +1,52 @@
+[
+  {
+    "model": "contacts.contactinfo",
+    "pk": 1,
+    "fields": {
+      "address": "г. Москва, МКАД 10 км, стр. 5",
+      "latitude": 55.7558,
+      "longitude": 37.6176,
+      "phone": "+7 (495) 123-45-67",
+      "email": "info@paintstore.ru",
+      "whatsapp": "+79001234567",
+      "telegram": "@paintstore_support",
+      "working_hours": "Пн–Пт: 9:00–18:00, Сб: 10:00–15:00"
+    }
+  },
+  {
+    "model": "products.product",
+    "pk": 1,
+    "fields": {
+      "name": "Эмаль ПФ-115 белая",
+      "description": "Универсальная эмаль для наружных и внутренних работ. Быстросохнущая.",
+      "price": "450.00",
+      "stock": 120,
+      "image_url": "https://example.com/pf115.jpg",
+      "category": "Эмаль"
+    }
+  },
+  {
+    "model": "products.product",
+    "pk": 2,
+    "fields": {
+      "name": "Грунт ГФ-021 серый",
+      "description": "Антикоррозийный грунт для металлических поверхностей.",
+      "price": "320.00",
+      "stock": 80,
+      "image_url": "https://example.com/gf021.jpg",
+      "category": "Грунт"
+    }
+  },
+  {
+    "model": "products.product",
+    "pk": 3,
+    "fields": {
+      "name": "Лак ПУ-258 глянцевый",
+      "description": "Полиуретановый лак для дерева. Высокая износостойкость.",
+      "price": "680.00",
+      "stock": 45,
+      "image_url": "https://example.com/pu258.jpg",
+      "category": "Лак"
+    }
+  }
+]

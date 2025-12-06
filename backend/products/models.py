@@ -7,7 +7,7 @@ class Product(models.Model):
     stock = models.PositiveIntegerField("Остаток на складе", default=0)
     image_url = models.URLField("Ссылка на изображение", blank=True)
     category = models.CharField("Категория", max_length=100, blank=True)  # например: "Эмаль", "Грунт", "Лак"
-    created_at = models.DateTimeField("Дата добавления", auto_now_add=True)
+    created_at = models.DateTimeField("Дата добавления", auto_now_add=True, null=True)
 
     class Meta:
         verbose_name = "Товар"
