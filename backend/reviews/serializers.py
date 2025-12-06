@@ -2,6 +2,7 @@ from rest_framework import serializers
 from django.contrib.auth.models import User
 from .models import Review
 from products.serializers import ProductSerializer
+from products.models import Product
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
