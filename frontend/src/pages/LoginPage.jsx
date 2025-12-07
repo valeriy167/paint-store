@@ -2,25 +2,25 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Form, Input, Button, Card, Typography, message } from 'antd';
 import { UserOutlined, LockOutlined } from '@ant-design/icons';
-import { api } from '../services/api';
+import { useAuth } from '../contexts/AuthContext'; // ← только он нужен
 
 const { Title } = Typography;
 
 export default function LoginPage() {
+  const { login } = useAuth(); // login из контекста!
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
   const onFinish = async (values) => {
     setLoading(true);
     try {
-      const data = await api.login(values);
-      // Сохраняем токены
-      localStorage.setItem('access', data.access);
-      localStorage.setItem('refresh', data.refresh);
+      // Используем login из контекста — он вызывает setUser()
+      await login(values);
       message.success('Вход выполнен!');
-      navigate('/'); // или '/profile'
+      navigate('/');
     } catch (err) {
-      message.error(err.message);
+      // err — строка из AuthContext (например, "Неверный логин или пароль")
+      message.error(err.message || err || 'Ошибка входа');
     } finally {
       setLoading(false);
     }
@@ -35,7 +35,7 @@ export default function LoginPage() {
           name="login"
           layout="vertical"
           onFinish={onFinish}
-          initialValues={{ username: 'admin', password: '123' }} // для теста
+          initialValues={{ username: 'hello', password: '123' }}
         >
           <Form.Item
             name="username"

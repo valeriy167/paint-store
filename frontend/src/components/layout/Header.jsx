@@ -1,14 +1,17 @@
-import { Layout, Menu, Button, Space, Row, Col } from 'antd';
+import { Layout, Menu, Button, Space, Row, Col, Avatar } from 'antd';
 import { Link, useNavigate } from 'react-router-dom'; // ← useNavigate добавлен
 import { 
   UserOutlined, ShoppingCartOutlined, 
-  HomeOutlined, ContactsOutlined, CommentOutlined 
+  HomeOutlined, ContactsOutlined, CommentOutlined,
+  LogoutOutlined
 } from '@ant-design/icons';
+import { useAuth } from '../../contexts/AuthContext';
 
 const { Header: AntHeader } = Layout;
 
 export default function Header() {
   const navigate = useNavigate(); // ← хук навигации
+  const { user, logout } = useAuth();
 
   return (
     <AntHeader 
@@ -60,23 +63,37 @@ export default function Header() {
           />
         </Col>
 
-        <Col>
-          <Space size="middle">
-            <Button 
-              type="text" 
-              icon={<UserOutlined />} 
-              onClick={() => navigate('/login')}
-            >
-              Войти
-            </Button>
-            <Button 
-              type="primary" 
-              onClick={() => navigate('/register')}
-            >
-              Регистрация
-            </Button>
-          </Space>
-        </Col>
+            <Col>
+              {user ? (
+                <Space size="middle">
+                  <Avatar icon={<UserOutlined />} />
+                  <Button 
+                    type="text" 
+                    //icon={<UserOutlined />} 
+                    onClick={() => navigate('/profile')}
+                  >
+                    {user.username}
+                  </Button>
+                  <Button 
+                    type="text" 
+                    icon={<LogoutOutlined />} 
+                    onClick={logout}
+                  >
+                    Выход
+                  </Button>
+                </Space>
+              ) : (
+                <Space size="middle">
+                  <Button type="text" icon={<UserOutlined />} onClick={() => navigate('/login')}>
+                    Войти
+                  </Button>
+                  <Button type="primary" onClick={() => navigate('/register')}>
+                    Регистрация
+                  </Button>
+                </Space>
+              )}
+            </Col>
+        
       </Row>
     </AntHeader>
   );

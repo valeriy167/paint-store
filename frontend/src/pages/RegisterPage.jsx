@@ -18,11 +18,36 @@ export default function RegisterPage() {
       navigate('/login');
     } catch (err) {
       console.error('Ошибка регистрации:', err);
-        alert(
-            'Данные: ' + JSON.stringify(values, null, 2) + '\n\n' +
-            'Ответ сервера: ' + JSON.stringify(err, null, 2)
-        );
-        message.error('Ошибка регистрации');
+
+      // Пытаемся извлечь понятное сообщение
+      let errorMsg = 'Ошибка регистрации';
+
+      // Вариант 1: ошибка от DRF — { username: ["..."], password: ["..."] }
+      if (err && typeof err === 'object') {
+        // Берём первую ошибку из первого поля
+        const firstField = Object.keys(err)[0];
+        const firstMessage = err[firstField]?.[0];
+
+        if (firstMessage) {
+          // Локализуем для пользователя
+          if (firstField === 'password' && firstMessage.includes('common')) {
+            errorMsg = 'Пароль слишком простой. Используйте неочевидную комбинацию.';
+          } else if (firstField === 'password' && firstMessage.includes('short')) {
+            errorMsg = 'Пароль слишком короткий. Минимум 8 символов.';
+          } else if (firstField === 'password') {
+            errorMsg = 'Пароль не подходит: ' + firstMessage;
+          } else if (firstField === 'username') {
+            errorMsg = 'Такой логин уже занят или недопустим.';
+          } else if (firstField === 'email') {
+            errorMsg = 'Некорректный или занятый email.';
+          } else {
+            errorMsg = firstMessage;
+          }
+        }
+      }
+
+      message.error(errorMsg);
+
     } finally {
       setLoading(false);
     }
@@ -57,9 +82,17 @@ export default function RegisterPage() {
 
           <Form.Item
             name="password"
-            rules={[{ required: true, message: 'Введите пароль' }]}
+            label="Пароль"
+            rules={[
+              { required: true, message: 'Введите пароль' },
+              { min: 8, message: 'Минимум 8 символов' },
+              { 
+                pattern: /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/, 
+                message: 'Должен содержать заглавную букву и цифру'
+              },
+            ]}
           >
-            <Input.Password prefix={<LockOutlined />} placeholder="Пароль" />
+            <Input.Password prefix={<LockOutlined />} />
           </Form.Item>
 
           <Form.Item
