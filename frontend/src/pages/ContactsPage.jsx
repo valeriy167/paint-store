@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { Spin, Alert, Card, Row, Col, Typography, Space, Divider } from 'antd';
 import {
   PhoneOutlined,
@@ -14,6 +14,14 @@ export default function ContactsPage() {
   const [contact, setContact] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+
+  // // Для карты используем короткую ссылку — без координат
+  // const mapUrl = 'https://yandex.ru/map-widget/v1/?um=CLgk4G43&source=constructor';
+
+  const mapUrl = useMemo(() => {
+    if (!contact?.longitude || !contact?.latitude) return '';
+    return `https://yandex.ru/map-widget/v1/?ll=${contact.longitude},${contact.latitude}&z=15&pt=${contact.longitude},${contact.latitude}`;
+  }, [contact]);
 
   useEffect(() => {
     api.getContacts()
@@ -45,9 +53,6 @@ export default function ContactsPage() {
   // Теперь можно деструктурировать
   const { address, phone, email, whatsapp, telegram, working_hours } = contact;
 
-  // Для карты используем короткую ссылку — без координат
-  const mapUrl = 'https://yandex.ru/map-widget/v1/?um=CLgk4G43&source=constructor';
-
   return (
     <div style={{ padding: '24px 0' }}>
       <Title level={2} style={{ textAlign: 'center', marginBottom: 32 }}>
@@ -59,7 +64,7 @@ export default function ContactsPage() {
           <Card title={<><EnvironmentOutlined /> На карте</>} variant="filled">
             <div style={{ width: '100%', height: 400, borderRadius: 8, overflow: 'hidden', border: '1px solid #eee' }}>
               <iframe
-                src={mapUrl}
+                src={mapUrl || "about:blank"}
                 width="100%"
                 height="100%"
                 frameBorder="0"

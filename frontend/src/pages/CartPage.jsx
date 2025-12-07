@@ -73,7 +73,15 @@ export default function CartPage() {
                 <Card style={{ width: '100%' }}>
                   <div style={{ display: 'flex', gap: 24, alignItems: 'center' }}>
                     <div style={{ width: 100, height: 80, backgroundColor: '#f5f5f5', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                      <Text type="secondary">img</Text>
+                      {item.product_image ? (
+                            <img
+                            src={item.product_image}
+                            alt={item.product_name}
+                            style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }}
+                            />
+                        ) : (
+                            <Text type="secondary" style={{ fontSize: 12 }}>img</Text>
+                        )}
                     </div>
                     <div style={{ flex: 1 }}>
                       <Text strong>{item.product_name}</Text>
