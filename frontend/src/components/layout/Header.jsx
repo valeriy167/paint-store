@@ -1,5 +1,5 @@
 import { Layout, Menu, Button, Space, Row, Col } from 'antd';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom'; // ← useNavigate добавлен
 import { 
   UserOutlined, ShoppingCartOutlined, 
   HomeOutlined, ContactsOutlined, CommentOutlined 
@@ -8,6 +8,8 @@ import {
 const { Header: AntHeader } = Layout;
 
 export default function Header() {
+  const navigate = useNavigate(); // ← хук навигации
+
   return (
     <AntHeader 
       style={{ 
@@ -46,8 +48,8 @@ export default function Header() {
               border: 'none',
               display: 'flex',
               justifyContent: 'center',
-              flexWrap: 'wrap', // ← разрешаем перенос
-              minWidth: 0      // ← фикс для flex-контейнеров
+              flexWrap: 'wrap',
+              minWidth: 0
             }}
             items={[
               { key: 'home', icon: <HomeOutlined />, label: <Link to="/">Главная</Link> },
@@ -60,8 +62,19 @@ export default function Header() {
 
         <Col>
           <Space size="middle">
-            <Button type="text" icon={<UserOutlined />}>Войти</Button>
-            <Button type="primary">Регистрация</Button>
+            <Button 
+              type="text" 
+              icon={<UserOutlined />} 
+              onClick={() => navigate('/login')}
+            >
+              Войти
+            </Button>
+            <Button 
+              type="primary" 
+              onClick={() => navigate('/register')}
+            >
+              Регистрация
+            </Button>
           </Space>
         </Col>
       </Row>

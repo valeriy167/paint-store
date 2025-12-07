@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Form, Input, Button, Card, Typography, message } from 'antd';
 import { UserOutlined, LockOutlined, MailOutlined, PhoneOutlined } from '@ant-design/icons';
+import { api } from '../services/api';
 
 const { Title } = Typography;
 
@@ -12,11 +13,16 @@ export default function RegisterPage() {
   const onFinish = async (values) => {
     setLoading(true);
     try {
-      // Пока нет эндпоинта — заглушка
-      message.info('Регистрация временно недоступна. Используйте логин: admin / пароль: 123');
-      setTimeout(() => navigate('/login'), 1500);
+      await api.register(values);
+      message.success('Регистрация прошла успешно!');
+      navigate('/login');
     } catch (err) {
-      message.error(err.message);
+      console.error('Ошибка регистрации:', err);
+        alert(
+            'Данные: ' + JSON.stringify(values, null, 2) + '\n\n' +
+            'Ответ сервера: ' + JSON.stringify(err, null, 2)
+        );
+        message.error('Ошибка регистрации');
     } finally {
       setLoading(false);
     }
@@ -54,6 +60,24 @@ export default function RegisterPage() {
             rules={[{ required: true, message: 'Введите пароль' }]}
           >
             <Input.Password prefix={<LockOutlined />} placeholder="Пароль" />
+          </Form.Item>
+
+          <Form.Item
+            name="password_confirm"
+            label="Подтвердите пароль"
+            rules={[
+                { required: true, message: 'Подтвердите пароль' },
+                ({ getFieldValue }) => ({
+                validator(_, value) {
+                    if (!value || getFieldValue('password') === value) {
+                    return Promise.resolve();
+                    }
+                    return Promise.reject(new Error('Пароли не совпадают'));
+                },
+                }),
+            ]}
+            >
+            <Input.Password prefix={<LockOutlined />} />
           </Form.Item>
 
           <Form.Item

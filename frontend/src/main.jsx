@@ -1,19 +1,19 @@
+// src/main.jsx
 import React from 'react';
 import ReactDOM from 'react-dom/client';
+import { BrowserRouter } from 'react-router-dom'; // ← импорт
 import { ConfigProvider } from 'antd';
-import 'antd/dist/reset.css'; // сброс стилей Ant Design v5+
-// import { StrictMode } from 'react'
-// import { createRoot } from 'react-dom/client'
-import './index.css'
-import App from './App.jsx'
-
-// Для локализации Ant Design на русский (опционально, но круто)
 import ruRU from 'antd/locale/ru_RU';
+import 'antd/dist/reset.css';
+import App from './App.jsx';
+import './index.css';
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
-    <ConfigProvider locale={ruRU}>
-      <App />
-    </ConfigProvider>
+    <BrowserRouter> 
+      <ConfigProvider locale={ruRU}>
+        <App />
+      </ConfigProvider>
+    </BrowserRouter>
   </React.StrictMode>
 );

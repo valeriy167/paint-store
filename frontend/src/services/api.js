@@ -30,13 +30,18 @@ export const api = {
   },
 
   register(userData) {
-    return fetch(`${BASE_URL}/auth/register/`, { // ← пока нет, создадим ниже
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(userData)
-    }).then(res => {
-      if (!res.ok) throw new Error('Ошибка регистрации');
-      return res.json();
+  return fetch(`${BASE_URL}/profile/register/`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(userData)
+  }).then(async res => {
+    const data = await res.json();
+    if (!res.ok) {
+      // Если ошибка — попробуем извлечь первое сообщение
+      const firstError = Object.values(data)[0]?.[0] || 'Ошибка регистрации';
+      throw new Error(firstError);
+    }
+    return data;
     });
   },
 
