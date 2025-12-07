@@ -1,0 +1,18 @@
+html, body, #root {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  width: 100%;
+  overflow-x: hidden; /* предотвращаем гориз. прокрутку */
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  background-color: #f0f2f5; /* фон Ant Design по умолчанию */
+}
+
+/* Сбрасываем margin/padding для Layout */
+.ant-layout,
+.ant-layout-content {
+  min-height: 0;
+}
