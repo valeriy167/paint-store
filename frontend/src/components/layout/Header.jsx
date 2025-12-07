@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'; // ← useNavigate доб�
 import { 
   UserOutlined, ShoppingCartOutlined, 
   HomeOutlined, ContactsOutlined, CommentOutlined,
-  LogoutOutlined
+  LogoutOutlined, DashboardOutlined,
 } from '@ant-design/icons';
 import { useAuth } from '../../contexts/AuthContext';
 
@@ -66,6 +66,16 @@ export default function Header() {
             <Col>
               {user ? (
                 <Space size="middle">
+
+                  {user.profile?.is_moderator && (
+                    <Button 
+                      type="text" 
+                      onClick={() => navigate('/admin-panel')}
+                      icon={<DashboardOutlined />}
+                    >
+                    </Button>
+                  )}
+
                   <Avatar icon={<UserOutlined />} />
                   <Button 
                     type="text" 

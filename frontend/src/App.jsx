@@ -7,6 +7,7 @@ import RegisterPage from './pages/RegisterPage';
 import ReviewsPage from './pages/ReviewsPage';
 import RequireAuth from './components/auth/RequireAuth';
 import CartPage from './pages/CartPage';
+import AdminPanelPage from './pages/AdminPanelPage';
 
 export default function App() {
   return (
@@ -23,6 +24,14 @@ export default function App() {
             element={
               <RequireAuth>
                 <CartPage />
+              </RequireAuth>
+            } 
+          />
+          <Route 
+            path="/admin-panel" 
+            element={
+              <RequireAuth>
+                <AdminPanelPage />
               </RequireAuth>
             } 
           />

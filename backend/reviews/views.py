@@ -5,6 +5,7 @@ from rest_framework.response import Response
 from django.contrib.auth.models import User
 from .models import Review
 from .serializers import ReviewSerializer
+from accounts.permissions import IsModerator
 
 class ReviewViewSet(viewsets.ModelViewSet):
     queryset = Review.objects.all()
@@ -12,10 +13,12 @@ class ReviewViewSet(viewsets.ModelViewSet):
 
     def get_permissions(self):
         if self.action in ['list', 'retrieve']:
-            return [AllowAny()]
+            return [AllowAny()] # ← публично: все видят одобренные отзывы
         if self.action == 'create':
-            return [IsAuthenticated()]
+            return [IsAuthenticated()]  # ← писать — только авторизованным
         # approve, pending — только модераторы (проверка в экшенах)
+        if self.action in ['approve', 'pending_reviews']:
+            return [IsModerator()]
         return [IsAuthenticated()]
 
     def get_queryset(self):
@@ -27,7 +30,7 @@ class ReviewViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
 
-    # GET /api/reviews/pending/ → только модераторам
+    # GET /api/reviews/pending/ - только модераторам
     @action(detail=False, methods=['get'], url_path='pending')
     def pending_reviews(self, request):
         if not request.user.profile.is_moderator:

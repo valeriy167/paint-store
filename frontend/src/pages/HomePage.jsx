@@ -24,7 +24,7 @@ export default function HomePage() {
   }, []);
 
   if (loading) return <Spin size="large" style={{ display: 'block', margin: '60px auto' }} />;
-  if (error) return <Alert message="Ошибка загрузки товаров" description={error} type="error" showIcon style={{ margin: 24 }} />;
+  if (error) return <Alert title="Ошибка загрузки товаров" description={error} type="error" showIcon style={{ margin: 24 }} />;
 
   return (
     <div style={{ padding: '24px 0' }}>
@@ -33,7 +33,7 @@ export default function HomePage() {
       </Title>
 
       {products.length === 0 ? (
-        <Alert message="Нет товаров" description="Скоро появятся новые позиции" type="info" showIcon style={{ margin: 24 }} />
+        <Alert title="Нет товаров" description="Скоро появятся новые позиции" type="info" showIcon style={{ margin: 24 }} />
       ) : (
         <Row gutter={[24, 32]} justify="center">
           {products.map(product => (

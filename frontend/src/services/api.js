@@ -140,4 +140,99 @@ export const api = {
       return res.json();
     });
   },
+
+  // Получить отзывы на модерации
+  getPendingReviews() {
+    const token = localStorage.getItem('access');
+    return fetch(`${BASE_URL}/reviews/pending/`, {
+      headers: { 'Authorization': `Bearer ${token}` }
+    }).then(res => {
+      if (!res.ok) throw new Error('Не удалось загрузить отзывы на модерации');
+      return res.json();
+    });
+  },
+
+  // Одобрить отзыв
+  approveReview(reviewId) {
+    const token = localStorage.getItem('access');
+    return fetch(`${BASE_URL}/reviews/${reviewId}/approve/`, {
+      method: 'PATCH',
+      headers: { 'Authorization': `Bearer ${token}` }
+    }).then(res => {
+      if (!res.ok) throw new Error('Не удалось одобрить отзыв');
+      return res.json();
+    });
+  },
+
+  // Создать товар
+  createProduct(data) {
+    const token = localStorage.getItem('access');
+    return fetch(`${BASE_URL}/products/`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify(data)
+    }).then(res => {
+      if (!res.ok) throw new Error('Не удалось создать товар');
+      return res.json();
+    });
+  },
+
+  // Обновить контакты
+  updateContacts(data) {
+    const token = localStorage.getItem('access');
+    return fetch(`${BASE_URL}/contacts/update/`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify(data)
+    }).then(res => {
+      if (!res.ok) throw new Error('Не удалось обновить контакты');
+      return res.json();
+    });
+  },
+
+  // Удалить товар
+  deleteProduct(id) {
+    const token = localStorage.getItem('access');
+    return fetch(`${BASE_URL}/products/${id}/`, {
+      method: 'DELETE',
+      headers: { 'Authorization': `Bearer ${token}` }
+    }).then(res => {
+      if (!res.ok) throw new Error('Не удалось удалить товар');
+    });
+  },
+
+  // Обновить товар
+  updateProduct(id, data) {
+    const token = localStorage.getItem('access');
+    return fetch(`${BASE_URL}/products/${id}/`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify(data)
+    }).then(res => {
+      if (!res.ok) throw new Error('Не удалось обновить товар');
+      return res.json();
+    });
+  },
+
+  // Отклонить отзыв (удалить)
+  rejectReview(reviewId) {
+    const token = localStorage.getItem('access');
+    return fetch(`${BASE_URL}/reviews/${reviewId}/`, {
+      method: 'DELETE',
+      headers: { 'Authorization': `Bearer ${token}` }
+    }).then(res => {
+      if (!res.ok) throw new Error('Не удалось отклонить отзыв');
+    });
+  },
+
+  
 };
