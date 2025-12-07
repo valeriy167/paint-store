@@ -85,4 +85,59 @@ export const api = {
       return res.json();
     });
   },
+
+  // Получить корзину
+  getCart() {
+    const token = localStorage.getItem('access');
+    return fetch(`${BASE_URL}/cart/`, {
+      headers: { 'Authorization': `Bearer ${token}` }
+    }).then(res => {
+      if (!res.ok) throw new Error('Не удалось загрузить корзину');
+      return res.json();
+    });
+  },
+
+  // Добавить товар
+  addToCart(productId, quantity = 1) {
+    const token = localStorage.getItem('access');
+    return fetch(`${BASE_URL}/cart/add_item/`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify({ product_id: productId, quantity })
+    }).then(res => {
+      if (!res.ok) throw new Error('Не удалось добавить в корзину');
+      return res.json();
+    });
+  },
+
+  // Обновить количество
+  updateCartItem(itemId, quantity) {
+    const token = localStorage.getItem('access');
+    return fetch(`${BASE_URL}/cart/${itemId}/update_item/`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify({ quantity })
+    }).then(res => {
+      if (!res.ok) throw new Error('Не удалось обновить');
+      return res.json();
+    });
+  },
+
+  // Удалить элемент
+  removeCartItem(itemId) {
+    const token = localStorage.getItem('access');
+    return fetch(`${BASE_URL}/cart/${itemId}/remove_item/`, {
+      method: 'DELETE',
+      headers: { 'Authorization': `Bearer ${token}` }
+    }).then(res => {
+      if (!res.ok) throw new Error('Не удалось удалить');
+      return res.json();
+    });
+  },
 };

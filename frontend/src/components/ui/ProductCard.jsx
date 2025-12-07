@@ -3,7 +3,7 @@ import { ShoppingCartOutlined } from '@ant-design/icons';
 
 const { Title, Text } = Typography;
 
-export default function ProductCard({ product }) {
+export default function ProductCard({ product, onAddToCart }) {
   return (
     <Card
       hoverable
@@ -52,7 +52,10 @@ export default function ProductCard({ product }) {
         }
       />
       <div style={{ marginTop: 'auto' }}>
-        <Space style={{ width: '100%', justifyContent: 'space-between' }}>
+        <Space style={{ 
+          width: '100%', 
+          justifyContent: 'space-between' 
+          }}>
           <Title level={4} style={{ margin: 0, color: '#1677ff' }}>
             {product.price} ₽
           </Title>
@@ -60,6 +63,7 @@ export default function ProductCard({ product }) {
             type="primary" 
             icon={<ShoppingCartOutlined />}
             size="small"
+            onClick={() => onAddToCart?.(product.id)}
           >
             В корзину
           </Button>

@@ -5,6 +5,8 @@ import ContactsPage from './pages/ContactsPage';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import ReviewsPage from './pages/ReviewsPage';
+import RequireAuth from './components/auth/RequireAuth';
+import CartPage from './pages/CartPage';
 
 export default function App() {
   return (
@@ -16,14 +18,14 @@ export default function App() {
           <Route path="/register" element={<RegisterPage />} />
           <Route path="/reviews" element={<ReviewsPage />} />
           <Route path="*" element={<div>404 - Страница не найдена</div>} />
-          {/* <Route 
+          <Route 
             path="/cart" 
             element={
               <RequireAuth>
                 <CartPage />
               </RequireAuth>
             } 
-          /> */}
+          />
         </Routes>
       </Layout>
   );

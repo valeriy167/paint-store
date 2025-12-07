@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Row, Col, Typography, Spin, Alert } from 'antd';
+import { Row, Col, Typography, Spin, Alert, message } from 'antd';
 import ProductCard from '../components/ui/ProductCard';
 import { api } from '../services/api';
 
@@ -46,7 +46,18 @@ export default function HomePage() {
               xl={6}       // 4 колонки (~25%)
               xxl={4.8}    // 5 колонок (~20%) — 24 / 5 = 4.8
             >
-              <ProductCard product={product} />
+              <ProductCard 
+                product={product}
+                onAddToCart={(productId) => {
+                  api.addToCart(productId)
+                    .then(() => {
+                      // Опционально: обновить корзину в хедере 
+                      // или просто показать уведомление
+                      message.success('Товар добавлен в корзину');
+                    })
+                    .catch(err => message.error(err.message || 'Не удалось добавить в корзину'));
+                }}
+              />
             </Col>
           ))}
         </Row>
