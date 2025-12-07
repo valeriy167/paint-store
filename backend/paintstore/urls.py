@@ -36,4 +36,5 @@ urlpatterns = [
     path('api/profile/', include('accounts.urls')),   # → accounts/urls.py
     path('api/schema/', SpectacularAPIView.as_view(), name='schema'),
     path('api/schema/swagger/', SpectacularSwaggerView.as_view(url_name='schema'), name='swagger-ui'),
+    path('api/cart/', include('cart.urls')),
 ]
