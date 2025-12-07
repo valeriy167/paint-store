@@ -8,7 +8,7 @@ export default function Footer() {
   return (
     <AntFooter style={{ textAlign: 'center', background: '#fafafa', padding: '24px 0' }}>
       <Text type="secondary">
-        © {new Date().getFullYear()} Paint Store — Интернет-магазин лакокрасочных материалов.{' '}
+        © {new Date().getFullYear()} Кузнечные краски Москвы — Интернет-магазин лакокрасочных материалов.{' '}
         <Link to="/contacts" style={{ marginLeft: 8 }}>Контакты</Link>
       </Text>
     </AntFooter>

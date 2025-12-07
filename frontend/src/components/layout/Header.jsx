@@ -3,14 +3,15 @@ import { Link, useNavigate } from 'react-router-dom'; // ← useNavigate доб�
 import { 
   UserOutlined, ShoppingCartOutlined, 
   HomeOutlined, ContactsOutlined, CommentOutlined,
-  LogoutOutlined, DashboardOutlined,
+  LogoutOutlined, DashboardOutlined, SettingFilled, 
+  SettingOutlined
 } from '@ant-design/icons';
 import { useAuth } from '../../contexts/AuthContext';
 
 const { Header: AntHeader } = Layout;
 
 export default function Header() {
-  const navigate = useNavigate(); // ← хук навигации
+  const navigate = useNavigate(); // - хук навигации
   const { user, logout } = useAuth();
 
   return (
@@ -38,7 +39,9 @@ export default function Header() {
       >
         <Col>
           <div style={{ fontWeight: 'bold', fontSize: 20, color: '#1677ff' }}>
-            Paint Store
+            <Link to="/">
+              Кузнечные краски Москвы
+            </Link>
           </div>
         </Col>
 
@@ -71,19 +74,15 @@ export default function Header() {
                     <Button 
                       type="text" 
                       onClick={() => navigate('/admin-panel')}
-                      icon={<DashboardOutlined />}
+                      icon={<SettingOutlined />}
                     >
                     </Button>
                   )}
 
-                  <Avatar icon={<UserOutlined />} />
-                  <Button 
-                    type="text" 
-                    //icon={<UserOutlined />} 
-                    onClick={() => navigate('/profile')}
-                  >
-                    {user.username}
-                  </Button>
+                  <Link to="/profile">
+                    <Avatar icon={<UserOutlined />} />
+                  </Link>
+
                   <Button 
                     type="text" 
                     icon={<LogoutOutlined />} 

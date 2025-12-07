@@ -8,6 +8,7 @@ import ReviewsPage from './pages/ReviewsPage';
 import RequireAuth from './components/auth/RequireAuth';
 import CartPage from './pages/CartPage';
 import AdminPanelPage from './pages/AdminPanelPage';
+import ProfilePage from './pages/ProfilePage';
 
 export default function App() {
   return (
@@ -18,7 +19,6 @@ export default function App() {
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
           <Route path="/reviews" element={<ReviewsPage />} />
-          <Route path="*" element={<div>404 - Страница не найдена</div>} />
           <Route 
             path="/cart" 
             element={
@@ -35,6 +35,15 @@ export default function App() {
               </RequireAuth>
             } 
           />
+          <Route 
+            path="/profile" 
+            element={
+              <RequireAuth>
+                <ProfilePage />
+              </RequireAuth>
+            } 
+          />
+          <Route path="*" element={<div>404 - Страница не найдена</div>} />
         </Routes>
       </Layout>
   );

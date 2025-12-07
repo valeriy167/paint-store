@@ -54,7 +54,7 @@ export const api = {
       if (!res.ok) throw new Error('Не авторизован');
       return res.json();
     });
-  }, 
+  },
 
   // Получить одобренные отзывы
   getReviews() {
@@ -234,5 +234,34 @@ export const api = {
     });
   },
 
-  
+  // Получить свои отзывы
+  getMyReviews() {
+    const token = localStorage.getItem('access');
+    return fetch(`${BASE_URL}/reviews/`, {
+      headers: { 'Authorization': `Bearer ${token}` }
+    }).then(res => {
+      if (!res.ok) throw new Error('Не удалось загрузить отзывы');
+      return res.json().then(data => 
+        // Отфильтруем на фронтенде (или лучше — на бэке через ?user_id=...)
+        data.filter(r => r.user.id === JSON.parse(localStorage.getItem('user') || '{}').id)
+      );
+    });
+  },
+
+  // Обновить профиль (расширим ProfileSerializer, чтобы phone/telegram можно было писать)
+  updateProfile(data) {
+    const token = localStorage.getItem('access');
+    return fetch(`${BASE_URL}/profile/me/`, {
+      method: 'PATCH', // или PUT
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ${token}'
+      },
+      body: JSON.stringify(data)
+    }).then(res => {
+      if (!res.ok) throw new Error('Не удалось обновить профиль');
+      return res.json();
+    });
+  },
+
 };
