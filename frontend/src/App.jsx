@@ -4,6 +4,7 @@ import HomePage from './pages/HomePage';
 import ContactsPage from './pages/ContactsPage';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
+import ReviewsPage from './pages/ReviewsPage';
 
 export default function App() {
   return (
@@ -13,6 +14,7 @@ export default function App() {
           <Route path="/contacts" element={<ContactsPage />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
+          <Route path="/reviews" element={<ReviewsPage />} />
           <Route path="*" element={<div>404 - Страница не найдена</div>} />
           {/* <Route 
             path="/cart" 

@@ -54,5 +54,35 @@ export const api = {
       if (!res.ok) throw new Error('Не авторизован');
       return res.json();
     });
-  }
+  }, 
+
+  // Получить одобренные отзывы
+  getReviews() {
+    return fetch(`${BASE_URL}/reviews/`)
+      .then(res => {
+        if (!res.ok) throw new Error('Не удалось загрузить отзывы');
+        return res.json();
+      });
+  },
+
+  // Отправить отзыв (требует авторизации)
+  postReview(data) {
+    const token = localStorage.getItem('access');
+    return fetch(`${BASE_URL}/reviews/`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify(data)
+    }).then(res => {
+      if (!res.ok) {
+        return res.json().then(err => {
+          const msg = Object.values(err)[0]?.[0] || 'Ошибка отправки';
+          throw new Error(msg);
+        });
+      }
+      return res.json();
+    });
+  },
 };
