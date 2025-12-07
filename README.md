@@ -3,7 +3,7 @@
 **Зачётный проект по веб-разработке**  
 Студент: ИУ6-33Б  
 Технологии:  
-- Frontend: React + TypeScript + Ant Design  
+- Frontend: React + JavaScript + Ant Design  
 - Backend: Django + DRF (Django REST Framework)  
 - База данных: PostgreSQL / SQLite (MVP)  
 - Размещение: GitHub Pages / Vercel + Render / Heroku  
