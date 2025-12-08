@@ -295,4 +295,22 @@ export const api = {
     });
   },
 
+  // Получить настройки
+  getSiteSettings() {
+    return fetch(`${BASE_URL}/site/settings/`).then(r => r.json());
+  },
+
+  // Обновить настройки (только для модераторов)
+  updateSiteSettings(data) {
+    const token = localStorage.getItem('access');
+    return fetch(`${BASE_URL}/site/settings/`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+      body: JSON.stringify(data)
+    }).then(r => {
+      if (!r.ok) throw new Error('Не удалось сохранить настройки');
+      return r.json();
+    });
+  },
+
 };

@@ -11,6 +11,7 @@ import AdminPanelPage from './pages/AdminPanelPage';
 import ProfilePage from './pages/ProfilePage';
 
 export default function App() {
+  
   return (
       <Layout>
         <Routes>

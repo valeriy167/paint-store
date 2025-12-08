@@ -5,13 +5,16 @@ import {
   HomeOutlined, ContactsOutlined, CommentOutlined,
   LogoutOutlined, DashboardOutlined, SettingFilled, 
   SettingOutlined, MenuOutlined, CloseOutlined, 
+  SwapOutlined, 
 } from '@ant-design/icons';
 import { useAuth } from '../../contexts/AuthContext';
 import { useState, useEffect } from 'react'; 
+import { useTheme } from '../../hooks/useTheme';
 
 const { Header: AntHeader } = Layout;
 
 export default function Header() {
+  const { isDark, toggleTheme } = useTheme();
   const navigate = useNavigate();
   const { user, logout } = useAuth();
   const [isMobile, setIsMobile] = useState(false);
@@ -81,6 +84,12 @@ export default function Header() {
         ) : null}
 
         <Col>
+          <Button 
+            className="toggle-theme-btn"
+            type="text"
+            icon={isDark ? <SwapOutlined rotate={180} /> : <SwapOutlined />}
+            onClick={toggleTheme}
+          />
           {user ? (
             <Space size="middle">
               {user.profile?.is_moderator && (

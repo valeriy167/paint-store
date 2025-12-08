@@ -1,6 +1,6 @@
 // src/pages/AdminPanelPage.jsx
 import { useState, useEffect } from 'react';
-import { Tabs, Table, Form, Input, Button, Switch, Space, Card, Typography, message, Alert } from 'antd';
+import { Tabs, Table, Form, Input, Button, Switch, Space, Card, Typography, message, Alert, Slider, InputNumber, App } from 'antd';
 import { useAuth } from '../contexts/AuthContext';
 import { api } from '../services/api';
 import {
@@ -9,7 +9,8 @@ import {
   StopOutlined,
   EditOutlined,
   DeleteOutlined,
-  EnvironmentOutlined
+  EnvironmentOutlined,
+  SwapOutlined,
 } from '@ant-design/icons';
 
 const { Title, Text } = Typography;
@@ -48,6 +49,11 @@ export default function AdminPanelPage() {
             key: 'contacts',
             label: 'Контакты',
             children: <ContactsTab />
+          },
+          {
+            key: 'theme',
+            label: 'Тема',
+            children: <ThemeSettingsTab />
           }
         ]}
       />
@@ -415,5 +421,60 @@ function ContactsTab() {
         />
       )}
     </Space>
+  );
+}
+
+//========Вкладка: Тема========
+function ThemeSettingsTab() {
+  const [form] = Form.useForm();
+  const contextHolder = message.useMessage();
+  const { message: messageApi } = App.useApp();
+
+  useEffect(() => {
+    // Загрузить текущие настройки из БД
+    api.getSiteSettings().then(data => {
+      form.setFieldsValue(data);
+      applySettings(data); // применить сразу
+    });
+  }, [form]);
+
+  const applySettings = (data) => {
+    const { bgImage, bgBlur = 4, bgOpacity = 0.2 } = data;
+    document.documentElement.style.setProperty('--bg-image', bgImage ? `url(${bgImage})` : 'none');
+    document.documentElement.style.setProperty('--bg-blur', `${bgBlur}px`);
+    document.documentElement.style.setProperty('--bg-opacity', bgOpacity);
+  };
+
+  const onFinish = async (values) => {
+    try {
+      const res = await api.updateSiteSettings(values);
+      applySettings(res);
+      messageApi.success('Фон и тема обновлены для всех пользователей');
+    } catch (err) {
+      messageApi.error(err.message);
+    }
+  };
+
+  return (
+    <Card title="Глобальные настройки сайта">
+      {contextHolder}
+      <Form form={form} layout="vertical" onFinish={onFinish}>
+        <Form.Item name="bgImage" label="URL фона">
+          <Input placeholder="https://example.com/bg.jpg" />
+        </Form.Item>
+        <Form.Item name="bgBlur" label="Размытие (px)">
+          <InputNumber min={0} max={20} />
+        </Form.Item>
+        <Form.Item name="bgOpacity" label="Прозрачность фона (0–1)">
+          <InputNumber min={0} max={1} step={0.05} />
+        </Form.Item>
+
+        <Form.Item>
+          <Button type="primary" htmlType="submit" icon={<SwapOutlined />}>
+            Сохранить и применить для всех
+          </Button>
+        </Form.Item>
+      </Form>
+    </Card>
   );
 }

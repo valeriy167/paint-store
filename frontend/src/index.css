@@ -6,13 +6,146 @@ html, body, #root {
   overflow-x: hidden; /* предотвращаем гориз. прокрутку */
 }
 
-body {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-  background-color: #f0f2f5; /* фон Ant Design по умолчанию */
+body.light-theme {
+  --bg-primary: #f5f5f5;
+  --bg-card: #fff;
+  --text-primary: #000;
 }
+
+body.dark-theme {
+  --bg-primary: #141414;
+  --bg-card: #1f1f1f;
+  --text-primary: #f0f0f0;
+}
+
+body {
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  background-image: var(--bg-image);
+  background-size: cover;
+  background-attachment: fixed;
+  background-position: center;
+  transition: all 0.3s;
+}
+
 
 /* Сбрасываем margin/padding для Layout */
 .ant-layout,
 .ant-layout-content {
   min-height: 0;
+}
+
+:root {
+  --bg-image: none;
+  --bg-blur: 4px;
+  --bg-opacity: 0.2;
+}
+
+body::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: var(--bg-image-url, none);
+  background-size: cover;
+  background-position: center;
+  filter: blur(var(--bg-blur, 4px));
+  z-index: -2;
+}
+
+body::after {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: var(--bg-primary);
+  opacity: var(--bg-opacity, 0.2);
+  z-index: -1;
+}
+
+/* src/index.css */
+[data-theme="dark"] {
+  --bg-primary: #141414;
+  --bg-secondary: #1f1f1f;
+  --text-primary: #f0f0f0;
+  --border-color: #333;
+}
+
+[data-theme="light"] {
+  --bg-primary: #f5f5f5;
+  --bg-secondary: #fff;
+  --text-primary: #000;
+  --border-color: #e0e0e0;
+}
+
+/* Принудительно стилизуем Layout и Header/Footer */
+.ant-layout,
+.ant-layout-header,
+.ant-layout-footer {
+  background: var(--bg-secondary) !important;
+  color: var(--text-primary) !important;
+  border-color: var(--border-color) !important;
+}
+
+/* Принудительная поддержка темы для старых компонентов */
+[data-theme='dark'] {
+  --ant-primary-color: #1677ff;
+  --ant-bg-layout: #000;
+  --ant-bg-container: #141414;
+  --ant-card-background: #1f1f1f;
+  --ant-component-background: #1f1f1f;
+}
+
+.ant-layout,
+.ant-layout-header,
+.ant-layout-footer,
+.ant-card,
+.ant-btn,
+.ant-menu,
+.ant-input,
+.ant-select {
+  background: var(--ant-component-background, #fff) !important;
+  color: var(--text-primary, #000) !important;
+  border-color: var(--border-color, #d9d9d9) !important;
+}
+
+[data-theme='dark'] .ant-btn-primary {
+  background: #1677ff !important;
+  border-color: #1677ff !important;
+}
+
+/* Кнопка смены темы — всегда видима */
+.toggle-theme-btn {
+  color: var(--text-primary, #000);
+}
+
+/* Принудительно применить тему ко всем Ant-компонентам */
+[data-theme='dark'] .ant-btn,
+[data-theme='dark'] .ant-card,
+[data-theme='dark'] .ant-menu,
+[data-theme='dark'] .ant-input,
+[data-theme='dark'] .ant-form,
+[data-theme='dark'] .ant-layout,
+[data-theme='dark'] .ant-avatar,
+[data-theme='dark'] .ant-table {
+  background: #1f1f1f !important;
+  color: #f0f0f0 !important;
+  border-color: #333 !important;
+}
+
+[data-theme='light'] .ant-btn,
+[data-theme='light'] .ant-card,
+[data-theme='light'] .ant-menu,
+[data-theme='light'] .ant-input,
+[data-theme='light'] .ant-form,
+[data-theme='light'] .ant-layout,
+[data-theme='light'] .ant-avatar,
+[data-theme='light'] .ant-table {
+  background: #fff !important;
+  color: #000 !important;
+  border-color: #d9d9d9 !important;
 }
