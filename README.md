@@ -1,4 +1,4 @@
-# 🎨 Paint Store — Интернет-магазин лакокрасочных материалов
+# Paint Store — Интернет-магазин лакокрасочных материалов
 
 [![Django](https://img.shields.io/badge/Django-4.2+-092e20?logo=django)](https://www.djangoproject.com/)
 [![React](https://img.shields.io/badge/React-18+-61DAFB?logo=react)](https://react.dev/)
