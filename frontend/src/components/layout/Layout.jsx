@@ -23,11 +23,12 @@ export default function Layout({ children }) {
         height: '100%',
         backgroundImage: `url(${bgData.image})`,
         backgroundSize: 'cover',
-        backgroundPosition: 'center',
+        //backgroundPosition: 'center',
+        //backgroundSize: '100% 100%',
         backgroundRepeat: 'no-repeat',
         filter: `blur(${bgData.blur_amount || 0}px)`,
         // Используем backgroundSize для масштаба фона
-        backgroundSize: `${(bgData.scale_factor || 1) * 100}% auto`,
+        backgroundSize: `${(bgData.scale_factor || 1) * 100}% 100%`,
         // backgroundSize: 'cover', // Альтернатива: покрыть всё, может обрезать
         zIndex: -1,
       }}
