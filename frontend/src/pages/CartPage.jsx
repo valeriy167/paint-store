@@ -93,7 +93,7 @@ export default function CartPage() {
       </div>
 
       {cart.items.length === 0 ? (
-        <Card>
+        <Card style={{ marginTop: 32 }}>
           <Alert 
             title={<strong>Корзина пуста</strong>}  
             description="Добавьте товары на главной странице." 
@@ -152,7 +152,7 @@ export default function CartPage() {
           <Card style={{ marginTop: 24, textAlign: 'right' }}>
             <Space size="large">
               <Text>Итого:</Text>
-              <Title level={3} style={{ margin: 0, color: '#1677ff' }}>
+              <Title level={3} style={{ marginRight: 10, color: '#1677ff' }}>
                 {cart.total_price} ₽
               </Title>
             </Space>

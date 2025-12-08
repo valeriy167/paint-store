@@ -4,7 +4,7 @@ import {
   PhoneOutlined,
   MailOutlined,
   MessageOutlined,
-  EnvironmentOutlined
+  EnvironmentOutlined,
 } from '@ant-design/icons';
 import { api } from '../services/api';
 

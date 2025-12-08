@@ -4,7 +4,7 @@ import {
   UserOutlined, ShoppingCartOutlined, 
   HomeOutlined, ContactsOutlined, CommentOutlined,
   LogoutOutlined, DashboardOutlined, SettingFilled, 
-  SettingOutlined, MenuOutlined, CloseOutlined, 
+  SettingOutlined, MenuOutlined, CloseOutlined, MailOutlined, 
 } from '@ant-design/icons';
 import { useAuth } from '../../contexts/AuthContext';
 import { useState, useEffect } from 'react'; 
@@ -27,9 +27,9 @@ export default function Header() {
 
   const menuItems = [
     { key: 'home', icon: <HomeOutlined />, label: <Link to="/">Главная</Link> },
-    { key: 'contacts', icon: <ContactsOutlined />, label: <Link to="/contacts">Контакты</Link> },
     { key: 'cart', icon: <ShoppingCartOutlined />, label: <Link to="/cart">Корзина</Link> },
     { key: 'reviews', icon: <CommentOutlined />, label: <Link to="/reviews">Отзывы</Link> },
+    { key: 'contacts', icon: <MailOutlined />, label: <Link to="/contacts">Контакты</Link> },
   ];
 
   return (
