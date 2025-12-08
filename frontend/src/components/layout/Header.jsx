@@ -1,24 +1,42 @@
-import { Layout, Menu, Button, Space, Row, Col, Avatar } from 'antd';
+import { Layout, Menu, Button, Space, Row, Col, Avatar, Drawer } from 'antd';
 import { Link, useNavigate } from 'react-router-dom'; // ← useNavigate добавлен
 import { 
   UserOutlined, ShoppingCartOutlined, 
   HomeOutlined, ContactsOutlined, CommentOutlined,
   LogoutOutlined, DashboardOutlined, SettingFilled, 
-  SettingOutlined
+  SettingOutlined, MenuOutlined, CloseOutlined, 
 } from '@ant-design/icons';
 import { useAuth } from '../../contexts/AuthContext';
+import { useState, useEffect } from 'react'; 
 
 const { Header: AntHeader } = Layout;
 
 export default function Header() {
-  const navigate = useNavigate(); // - хук навигации
+  const navigate = useNavigate();
   const { user, logout } = useAuth();
+  const [isMobile, setIsMobile] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  // Определяем мобильное устройство
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 768);
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
+  const menuItems = [
+    { key: 'home', icon: <HomeOutlined />, label: <Link to="/">Главная</Link> },
+    { key: 'contacts', icon: <ContactsOutlined />, label: <Link to="/contacts">Контакты</Link> },
+    { key: 'cart', icon: <ShoppingCartOutlined />, label: <Link to="/cart">Корзина</Link> },
+    { key: 'reviews', icon: <CommentOutlined />, label: <Link to="/reviews">Отзывы</Link> },
+  ];
 
   return (
     <AntHeader 
       style={{ 
         background: '#fff',
-        padding: '0 24px',
+        padding: '0 16px', // ← уменьшили padding по бокам
         boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
         position: 'sticky',
         top: 0,
@@ -38,72 +56,88 @@ export default function Header() {
         }}
       >
         <Col>
-          <div style={{ fontWeight: 'bold', fontSize: 20, color: '#1677ff' }}>
-            <Link to="/">
-              Кузнечные краски Москвы
-            </Link>
-          </div>
+          <Link to="/" style={{ fontWeight: 'bold', fontSize: 20, color: '#1677ff' }}>
+            Кузнечные краски Москвы
+          </Link>
         </Col>
 
-        <Col flex="1" style={{ margin: '0 24px' }}>
-          <Menu
-            theme="light"
-            mode="horizontal"
-            selectedKeys={[]}
-            style={{ 
-              border: 'none',
-              display: 'flex',
-              justifyContent: 'center',
-              flexWrap: 'wrap',
-              minWidth: 0
-            }}
-            items={[
-              { key: 'home', icon: <HomeOutlined />, label: <Link to="/">Главная</Link> },
-              { key: 'contacts', icon: <ContactsOutlined />, label: <Link to="/contacts">Контакты</Link> },
-              { key: 'cart', icon: <ShoppingCartOutlined />, label: <Link to="/cart">Корзина</Link> },
-              { key: 'reviews', icon: <CommentOutlined />, label: <Link to="/reviews">Отзывы</Link> },
-            ]}
-          />
-        </Col>
+        {/* Desktop menu */}
+        {!isMobile ? (
+          <Col flex="1" style={{ margin: '0 24px' }}>
+            <Menu
+              theme="light"
+              mode="horizontal"
+              selectedKeys={[]}
+              style={{ 
+                border: 'none',
+                display: 'flex',
+                justifyContent: 'center',
+                flexWrap: 'wrap',
+                minWidth: 0
+              }}
+              items={menuItems}
+            />
+          </Col>
+        ) : null}
 
-            <Col>
-              {user ? (
-                <Space size="middle">
-
-                  {user.profile?.is_moderator && (
-                    <Button 
-                      type="text" 
-                      onClick={() => navigate('/admin-panel')}
-                      icon={<SettingOutlined />}
-                    >
-                    </Button>
-                  )}
-
-                  <Link to="/profile">
-                    <Avatar icon={<UserOutlined />} />
-                  </Link>
-
-                  <Button 
-                    type="text" 
-                    icon={<LogoutOutlined />} 
-                    onClick={logout}
-                  >
-                    Выход
-                  </Button>
-                </Space>
-              ) : (
-                <Space size="middle">
-                  <Button type="text" icon={<UserOutlined />} onClick={() => navigate('/login')}>
-                    Войти
-                  </Button>
-                  <Button type="primary" onClick={() => navigate('/register')}>
-                    Регистрация
-                  </Button>
-                </Space>
+        <Col>
+          {user ? (
+            <Space size="middle">
+              {user.profile?.is_moderator && (
+                <Button type="text" onClick={() => navigate('/admin-panel')} icon={<SettingOutlined />} />
               )}
-            </Col>
-        
+              <Link to="/profile">
+                <Avatar icon={<UserOutlined />} size="small" />
+              </Link>
+              <Button type="text" icon={<LogoutOutlined />} onClick={logout} size="small">
+                Выход
+              </Button>
+            </Space>
+          ) : (
+            <Space size="middle">
+              <Button type="text" icon={<UserOutlined />} onClick={() => navigate('/login')} size="small">
+                Войти
+              </Button>
+              <Button type="primary" onClick={() => navigate('/register')} size="small">
+                Регистрация
+              </Button>
+            </Space>
+          )}
+        </Col>
+
+        {/* Mobile menu button */}
+        {isMobile && (
+          <Col>
+            <Button 
+              type="text" 
+              icon={
+                mobileMenuOpen ? 
+                  <CloseOutlined style={{ fontSize: 18 }} /> : 
+                  <MenuOutlined style={{ fontSize: 18 }} />
+              }
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              style={{ padding: 0, height: '100%' }}
+            />
+          </Col>
+        )}
       </Row>
+
+      {/* Mobile drawer */}
+      {isMobile && (
+        <Drawer
+          title="Меню"
+          placement="left"
+          onClose={() => setMobileMenuOpen(false)}
+          open={mobileMenuOpen}
+          width={240}
+        >
+          <Menu
+            mode="inline"
+            items={menuItems}
+            onClick={() => setMobileMenuOpen(false)}
+          />
+        </Drawer>
+      )}
     </AntHeader>
   );
 }
