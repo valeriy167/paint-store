@@ -1,9 +1,11 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, List, Button, Typography, Space, InputNumber, Alert, message, Modal, Form, Input } from 'antd';
-import { MinusOutlined, PlusOutlined, DeleteOutlined, ShoppingCartOutlined } from '@ant-design/icons';
+import { MinusOutlined, PlusOutlined, DeleteOutlined, ShoppingCartOutlined, FilePdfOutlined } from '@ant-design/icons';
 import { api } from '../services/api';
 import { useAuth } from '../contexts/AuthContext';
+import jsPDF from 'jspdf';
+import html2canvas from 'html2canvas';
 
 const { Title, Text } = Typography;
 
@@ -15,6 +17,7 @@ export default function CartPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [confirmLoading, setConfirmLoading] = useState(false);
   const [form] = Form.useForm();
+  const cartListRef = useRef(null);
 
   const handleCheckout = async (values) => {
     setConfirmLoading(true);
@@ -57,6 +60,64 @@ export default function CartPage() {
     api.removeCartItem(itemId)
       .then(setCart)
       .catch(err => message.error(err.message));
+  };
+
+  // --- Функция генерации PDF ---
+  const generatePDF = async () => {
+    if (!cart || cart.items.length === 0) {
+      message.warn('Корзина пуста. Невозможно создать PDF.');
+      return;
+    }
+
+    try {
+      message.info('Подготовка PDF...');
+
+      // Ждем, пока DOM обновится, если были изменения
+      await new Promise(resolve => setTimeout(resolve, 100));
+
+      // Выбираем элемент списка товаров
+      const listElement = cartListRef.current;
+      if (!listElement) {
+        throw new Error('Элемент списка товаров не найден');
+      }
+
+      // Используем html2canvas для создания изображения списка
+      const canvas = await html2canvas(listElement, {
+        scale: 1, // Можно увеличить для лучшего качества, но увеличится время
+        useCORS: true, // Позволяет загружать изображения с других доменов (если CORS разрешён)
+        allowTaint: true, // Альтернатива для useCORS, но менее безопасна
+      });
+
+      const imgData = canvas.toDataURL('image/png');
+      const pdf = new jsPDF('p', 'mm', 'a4');
+      const imgWidth = 210; // Ширина A4 в мм
+      const pageHeight = 297; // Высота A4 в мм
+      const imgHeight = (canvas.height * imgWidth) / canvas.width;
+      let heightLeft = imgHeight;
+      let position = 0;
+
+      pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+      heightLeft -= pageHeight;
+
+      // Если изображение больше одной страницы, добавляем следующие страницы
+      while (heightLeft >= 0) {
+        position = heightLeft - imgHeight;
+        pdf.addPage();
+        pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+        heightLeft -= pageHeight;
+      }
+
+      // Добавляем итоговую цену в конец PDF
+      const finalY = pdf.internal.getNumberOfPages() * pageHeight - 20; // Примерное расположение внизу последней страницы
+      pdf.text(`Итого: ${cart.total_price} ₽`, 10, finalY);
+
+      // Сохраняем PDF
+      pdf.save(`Корзина_${new Date().toISOString().slice(0, 19).replace(/:/g, '-')}.pdf`);
+      message.success('PDF успешно создан и сохранён!');
+    } catch (error) {
+      console.error('Ошибка при создании PDF:', error);
+      message.error('Не удалось создать PDF. Проверьте консоль.');
+    }
   };
 
   if (loading) return <div style={{ padding: 60, textAlign: 'center' }}><div className="ant-spin-dot"></div></div>;
@@ -103,6 +164,7 @@ export default function CartPage() {
         </Card>
       ) : (
         <>
+        <div ref={cartListRef}>
           <List
             style={{ marginTop: 32 }}
             dataSource={cart.items}
@@ -149,22 +211,40 @@ export default function CartPage() {
             )}
           />
 
-          <Card style={{ marginTop: 24, textAlign: 'right' }}>
-            <Space size="large">
-              <Text>Итого:</Text>
-              <Title level={3} style={{ marginRight: 10, color: '#1677ff' }}>
-                {cart.total_price} ₽
-              </Title>
-            </Space>
-            <Button 
-                type="primary" 
-                size="large" 
-                icon={<ShoppingCartOutlined />}
-                onClick={() => setIsModalOpen(true)}
-                disabled={cart?.items.length === 0}
-                >
-                Оформить заказ
-            </Button>
+          </div>
+
+          <Card style={{ marginTop: 24, }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              {/* Левая часть - кнопка PDF */}
+              <Space size="large">
+                <Button
+                    type="default"
+                    size="large"
+                    icon={<FilePdfOutlined />}
+                    onClick={generatePDF}
+                    disabled={cart?.items.length === 0}
+                    >
+                    Сохранить в PDF
+                </Button>
+              </Space>
+
+              {/* Правая часть - итого, цена и кнопка оформить заказ */}
+              <Space size="middle">
+                <Text>Итого:</Text>
+                <Title level={3} style={{ margin: '0 10px 0 0', color: '#1677ff' }}>  
+                  {cart.total_price} ₽
+                </Title>
+                <Button
+                    type="primary"
+                    size="large"
+                    icon={<ShoppingCartOutlined />}
+                    onClick={() => setIsModalOpen(true)}
+                    disabled={cart?.items.length === 0}
+                    >
+                    Оформить заказ
+                </Button>
+              </Space>
+            </div>
           </Card>
           <Modal
             title="Оформление заказа"
