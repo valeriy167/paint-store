@@ -12,6 +12,7 @@ import {
   EnvironmentOutlined,
   UploadOutlined
 } from '@ant-design/icons';
+import { useBackground } from '../contexts/BackgroundContext';
 
 const { Title, Text } = Typography;
 
@@ -426,6 +427,8 @@ function ContactsTab() {
 
 // === Вкладка: Настройки (Фоновое изображение) ===
 function SettingsTab() {
+  const { refreshBackground } = useBackground(); // Получаем функцию обновления
+  const [loadingButtonId, setLoadingButtonId] = useState(null);
   const [backgrounds, setBackgrounds] = useState([]);
   const [loading, setLoading] = useState(false);
   const [activeImageId, setActiveImageId] = useState(null);
@@ -501,17 +504,22 @@ function SettingsTab() {
     }
   };
 
-  const handleSetAsActive = async (id) => {
-    try {
-      await api.setActiveBackgroundImage(id);
-      message.success('Фоновое изображение установлено!');
-      // Обновляем состояние, чтобы отразить изменения
-      await updateStateAfterApiCall();
-    } catch (error) {
-      console.error('Error setting background as active:', error);
-      message.error('Ошибка установки изображения');
-    }
-  };
+    const handleSetAsActive = async (id) => {
+      setLoadingButtonId(id); // Установи ID кнопки как загружающейся
+      try {
+        await api.setActiveBackgroundImage(id);
+        message.success('Фоновое изображение установлено!');
+        // Вызываем updateStateAfterApiCall для обновления локального состояния вкладки
+        await updateStateAfterApiCall();
+        // Вызываем refreshBackground из контекста для обновления фона на сайте
+        refreshBackground();
+      } catch (error) {
+        console.error('Error setting background as active:', error);
+        message.error('Ошибка установки изображения');
+      } finally {
+        setLoadingButtonId(null); // Сбрось состояние загрузки
+      }
+    };
 
   const handleSaveSettings = async () => {
      if (!activeImageId) {
@@ -598,6 +606,7 @@ function SettingsTab() {
             size="small"
             onClick={() => handleSetAsActive(record.id)}
             disabled={record.id === activeImageId}
+            loading={loadingButtonId === record.id}
           >
             Установить как фон
           </Button>
