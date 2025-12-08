@@ -63,7 +63,7 @@ export default function ReviewsPage() {
           message="Оставить отзыв могут только авторизованные пользователи"
           type="info"
           showIcon
-          style={{ marginBottom: 32 }}
+          style={{ marginBottom: 32, marginTop: 32 }}
         />
       )}
 
