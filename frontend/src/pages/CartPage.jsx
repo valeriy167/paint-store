@@ -64,9 +64,33 @@ export default function CartPage() {
 
   return (
     <div style={{ padding: '24px 0' }}>
-      <Title level={2} style={{ textAlign: 'center', marginBottom: 32 }}>
+      {/* <Title level={2} style={{ textAlign: 'center', marginBottom: 32 }}>
         Ваша корзина
-      </Title>
+      </Title> */}
+
+      <div style={{
+          textAlign: 'center',
+          marginBottom: 32,
+          padding: '16px', // Отступы внутри
+          borderRadius: '8px', // Скругление углов
+          // Вариант 1: Полупрозрачный цвет на фоне
+          background: 'rgba(255, 255, 255, 0.8)',
+          // Вариант 2: Сплошной цвет (менее гармоничный с фоном сайта)
+          // background: '#f0f2f5',
+          // Вариант 3: Градиент
+          // background: 'linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(0,0,0,0.1) 100%)',
+          // Вариант 4: Белый с тенью
+          // background: '#ffffff',
+          // boxShadow: '0 2px 8px rgba(0, 0, 0, 0.15)',
+          maxWidth: 'fit-content', // Ширина по содержимому (опционально)
+          margin: '0 auto',       // Центрирование (если используешь maxWidth: 'fit-content')
+          // maxWidth: '500px',      // Ограничиваем ширину (опционально)
+          // margin: '0 auto',       // Центрируем
+        }}>
+        <Title level={2} style={{ margin: 0 }}>
+          Ваша корзина
+        </Title>
+      </div>
 
       {cart.items.length === 0 ? (
         <Card>
@@ -80,6 +104,7 @@ export default function CartPage() {
       ) : (
         <>
           <List
+            style={{ marginTop: 32 }}
             dataSource={cart.items}
             renderItem={item => (
               <List.Item>
