@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Row, Col, Typography, Spin, Alert, message } from 'antd';
 import ProductCard from '../components/ui/ProductCard';
 import { api } from '../services/api';
+import { FORMAT_RGB } from 'antd/es/color-picker/interface';
 
 const { Title } = Typography;
 
@@ -28,9 +29,9 @@ export default function HomePage() {
 
   return (
     <div style={{ padding: '24px 0' }}>
-      <Title level={2} style={{ textAlign: 'center', marginBottom: 32 }}>
+      {/* <Title level={2} style={{ textAlign: 'center', marginBottom: 32, background: 'fff' }}>
         Каталог товаров
-      </Title>
+      </Title> */}
 
       {products.length === 0 ? (
         <Alert title="Нет товаров" description="Скоро появятся новые позиции" type="info" showIcon style={{ margin: 24 }} />

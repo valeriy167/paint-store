@@ -35,7 +35,7 @@ export default function Layout({ children }) {
   ) : null;
 
   return (
-    <AntLayout style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
+    <AntLayout style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: 'transparent', }}>
       {backgroundDiv}
       <Header />
       <AntLayout.Content
@@ -45,8 +45,10 @@ export default function Layout({ children }) {
           margin: '0 auto',
           width: '100%',
           boxSizing: 'border-box',
-          // background: 'transparent',
-          background: 'rgba(255, 0, 0, 0.8)', // 80% непрозрачности
+          // // background: 'transparent',
+          // background: 'rgba(228, 17, 17, 0.1)', // 80% непрозрачности
+          // //backgroundAttachment: 'transparent',
+          // //color: 'transparent',
         }}
       >
         {children}
