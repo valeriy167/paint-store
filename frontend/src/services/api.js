@@ -1,5 +1,51 @@
 const BASE_URL = 'http://localhost:8000/api';
 
+// --- Вспомогательные функции для авторизованных запросов ---
+const getAuthHeaders = () => ({
+  'Authorization': `Bearer ${localStorage.getItem('access')}`,
+});
+
+const getOptions = (additionalHeaders = {}) => ({
+  method: 'GET',
+  headers: {
+    'Content-Type': 'application/json',
+    ...getAuthHeaders(),
+    ...additionalHeaders,
+  },
+});
+
+const postOptions = (body, isFormData = false) => ({
+  method: 'POST',
+  headers: isFormData ? getAuthHeaders() : { // Для FormData Content-Type ставит браузер
+    'Content-Type': 'application/json',
+    ...getAuthHeaders(),
+  },
+  body: isFormData ? body : JSON.stringify(body),
+});
+
+const putOptions = (body) => ({
+  method: 'PUT',
+  headers: {
+    'Content-Type': 'application/json',
+    ...getAuthHeaders(),
+  },
+  body: JSON.stringify(body),
+});
+
+const patchOptions = (body) => ({
+  method: 'PATCH',
+  headers: {
+    'Content-Type': 'application/json',
+    ...getAuthHeaders(),
+  },
+  body: JSON.stringify(body),
+});
+
+const deleteOptions = () => ({
+  method: 'DELETE',
+  headers: getAuthHeaders(),
+});
+
 export const api = {
   getProducts() {
     return fetch(`${BASE_URL}/products/`)
@@ -295,4 +341,51 @@ export const api = {
     });
   },
 
+  // --- Новые методы для работы с фоновыми изображениями ---
+  getBackgroundImages: () => fetch(`${BASE_URL}/background-images/`, getOptions()).then(response => {
+      if (!response.ok) throw new Error('Не удалось загрузить фоновые изображения');
+      return response.json();
+  }),
+
+  createBackgroundImage: (data) => fetch(`${BASE_URL}/background-images/`, postOptions(data, true)) // data должен включать blur_amount и scale_factor, если они есть
+    .then(response => {
+        if (!response.ok) throw new Error('Не удалось загрузить фоновое изображение');
+        return response.json();
+    }),
+
+  deleteBackgroundImage: (id) => fetch(`${BASE_URL}/background-images/${id}/`, deleteOptions())
+    .then(response => {
+        if (!response.ok) throw new Error('Не удалось удалить фоновое изображение');
+        return response.json(); // или просто response.ok
+    }),
+
+    // PATCH-запрос для установки изображения как активного
+  setActiveBackgroundImage: (id) => fetch(`${BASE_URL}/background-images/${id}/`, patchOptions({ is_active: true }))
+    .then(response => {
+        if (!response.ok) throw new Error('Не удалось установить фоновое изображение');
+        return response.json();
+    }),
+
+    getActiveBackgroundImage: () => fetch(`${BASE_URL}/background-images/active/`, getOptions()).then(response => {
+      if (!response.ok) throw new Error('Не удалось загрузить активное фоновое изображение');
+      return response.json(); // Ожидаем { image: '...', blur_amount: ..., scale_factor: ... }
+  }),
+
+  // src/services/api.js
+// ... остальные методы ...
+
+  updateBackgroundImage: (id, data) => fetch(`${BASE_URL}/background-images/${id}/`, patchOptions(data)) // Используем patchOptions
+    .then(response => {
+        if (!response.ok) {
+            // Лучше получить тело ошибки
+            if (response.status === 400) {
+                return response.json().then(errData => {
+                    console.error("Ошибка валидации при обновлении фона:", errData);
+                    throw new Error(`Не удалось обновить фоновое изображение: ${JSON.stringify(errData)}`);
+                });
+            }
+            throw new Error('Не удалось обновить фоновое изображение');
+        }
+        return response.json();
+    }),
 };

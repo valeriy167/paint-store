@@ -1,15 +1,16 @@
 // src/pages/AdminPanelPage.jsx
 import { useState, useEffect } from 'react';
-import { Tabs, Table, Form, Input, Button, Switch, Space, Card, Typography, message, Alert } from 'antd';
+import { Tabs, Table, Form, Input, Button, Switch, Space, Card, Typography, message, Alert, Slider, Upload, Image } from 'antd';
 import { useAuth } from '../contexts/AuthContext';
-import { api } from '../services/api';
+import { api } from '../services/api'; 
 import {
   PlusOutlined,
   CheckCircleOutlined,
   StopOutlined,
   EditOutlined,
   DeleteOutlined,
-  EnvironmentOutlined
+  EnvironmentOutlined,
+  UploadOutlined
 } from '@ant-design/icons';
 
 const { Title, Text } = Typography;
@@ -48,6 +49,11 @@ export default function AdminPanelPage() {
             key: 'contacts',
             label: 'Контакты',
             children: <ContactsTab />
+          },
+          {
+            key: 'settings',
+            label: 'Настройки',
+            children: <SettingsTab />
           }
         ]}
       />
@@ -274,7 +280,7 @@ function ProductsTab() {
             <Input placeholder="Эмаль, Грунт, Лак..." />
           </Form.Item>
           <Form.Item name="image_url" label="Ссылка на изображение">
-            <Input placeholder="https://example.com/image.jpg" />
+            <Input placeholder="https://example.com/image.jpg  " />
           </Form.Item>
           <Form.Item>
             <Button 
@@ -417,3 +423,260 @@ function ContactsTab() {
     </Space>
   );
 }
+
+// === Вкладка: Настройки (Фоновое изображение) ===
+function SettingsTab() {
+  const [backgrounds, setBackgrounds] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [activeImageId, setActiveImageId] = useState(null);
+  const [form] = Form.useForm();
+
+  // Функция для обновления состояния после API вызова
+  const updateStateAfterApiCall = async () => {
+    try {
+      const imagesResponse = await api.getBackgroundImages();
+      setBackgrounds(imagesResponse);
+
+      const activeResponse = await api.getActiveBackgroundImage();
+      if (activeResponse.image) {
+        const activeImage = imagesResponse.find(img => img.image === activeResponse.image);
+        if (activeImage) {
+          setActiveImageId(activeImage.id);
+          form.setFieldsValue({
+            blur_amount: activeResponse.blur_amount || 0,
+            scale_factor: activeResponse.scale_factor || 1,
+          });
+        } else {
+          // Если активного изображения нет, сбросить форму и activeImageId
+          setActiveImageId(null);
+          form.resetFields();
+        }
+      } else {
+         // Если активного изображения нет, сбросить форму и activeImageId
+         setActiveImageId(null);
+         form.resetFields();
+      }
+    } catch (error) {
+      console.error('Error fetching backgrounds or active image after API call:', error);
+      message.error('Ошибка обновления данных после действия');
+    }
+  };
+
+
+  useEffect(() => {
+    updateStateAfterApiCall();
+  }, []);
+
+  const handleUpload = async (file) => {
+    const formData = new FormData();
+    formData.append('image', file);
+    formData.append('is_active', 'true');
+    const values = form.getFieldsValue(['blur_amount', 'scale_factor']);
+    formData.append('blur_amount', values.blur_amount || 0);
+    formData.append('scale_factor', values.scale_factor || 1);
+
+    try {
+      await api.createBackgroundImage(formData);
+      message.success('Фоновое изображение загружено и установлено!');
+      await updateStateAfterApiCall(); // Обновляем после загрузки
+    } catch (error) {
+      console.error('Error uploading background:', error);
+      message.error('Ошибка загрузки изображения');
+    }
+  };
+
+  const handleDelete = async (id) => {
+    try {
+      await api.deleteBackgroundImage(id);
+      message.success('Фоновое изображение удалено!');
+      // Если удалили активное, сбросим его
+      if (activeImageId === id) {
+        setActiveImageId(null);
+        form.resetFields();
+      }
+      await updateStateAfterApiCall(); // Обновляем после удаления
+    } catch (error) {
+      console.error('Error deleting background:', error);
+      message.error('Ошибка удаления изображения');
+    }
+  };
+
+  const handleSetAsActive = async (id) => {
+    try {
+      await api.setActiveBackgroundImage(id);
+      message.success('Фоновое изображение установлено!');
+      // Обновляем состояние, чтобы отразить изменения
+      await updateStateAfterApiCall();
+    } catch (error) {
+      console.error('Error setting background as active:', error);
+      message.error('Ошибка установки изображения');
+    }
+  };
+
+  const handleSaveSettings = async () => {
+     if (!activeImageId) {
+        message.warn('Сначала выберите активное изображение.');
+        return;
+     }
+     try {
+        const values = form.getFieldsValue(['blur_amount', 'scale_factor']);
+        await api.updateBackgroundImage(activeImageId, values);
+        message.success('Настройки фона сохранены на сервере!');
+        // Обновляем, чтобы убедиться, что отображаются актуальные данные
+        await updateStateAfterApiCall();
+     } catch (error) {
+        console.error('Error saving settings:', error);
+        message.error(error.message || 'Ошибка сохранения настроек');
+     }
+  };
+
+  const uploadProps = {
+    beforeUpload: (file) => {
+      const isImage = file.type.startsWith('image/');
+      if (!isImage) {
+        message.error('Вы можете загружать только изображения!');
+      }
+      return isImage;
+    },
+    onChange: async ({ file }) => {
+      if (file.status === 'done') {
+        // Загрузка успешна
+      } else if (file.status === 'error') {
+        message.error(`${file.name} загрузка не удалась.`);
+      }
+    },
+    customRequest: ({ file, onSuccess, onError }) => {
+      handleUpload(file)
+        .then(() => onSuccess('ok'))
+        .catch((error) => onError(error));
+    },
+  };
+
+  // Найдем активное изображение для предварительного просмотра
+  const activeImageForPreview = backgrounds.find(img => img.id === activeImageId);
+
+  const columns = [
+    {
+      title: 'Изображение',
+      key: 'image',
+      render: (_, record) => (
+        <Image
+          src={record.image} // Убедись, что record.image - это корректный URL
+          alt={`Background ${record.id}`}
+          style={{ width: '100px', height: '100px', objectFit: 'cover' }}
+          // Добавим fallback на случай ошибки загрузки
+          fallback="https://via.placeholder.com/100" // или путь к локальной заглушке
+        />
+      ),
+    },
+    {
+      title: 'ID',
+      dataIndex: 'id',
+      key: 'id',
+    },
+    {
+      title: 'Параметры (B/S)',
+      key: 'params',
+      render: (_, record) => (
+        `${record.blur_amount.toFixed(1)}/${record.scale_factor.toFixed(2)}x`
+      ),
+    },
+    {
+      title: 'Статус',
+      key: 'status',
+      render: (_, record) => (
+        record.id === activeImageId ? <span style={{ color: 'green' }}>Активное</span> : 'Неактивное'
+      ),
+    },
+    {
+      title: 'Действия',
+      key: 'actions',
+      render: (_, record) => (
+        <Space>
+          <Button
+            type={record.id === activeImageId ? 'primary' : 'default'}
+            size="small"
+            onClick={() => handleSetAsActive(record.id)}
+            disabled={record.id === activeImageId}
+          >
+            Установить как фон
+          </Button>
+          <Button
+            danger
+            size="small"
+            icon={<DeleteOutlined />}
+            onClick={() => handleDelete(record.id)}
+          >
+          </Button>
+        </Space>
+      ),
+    },
+  ];
+
+  return (
+    <Space direction="vertical" style={{ width: '100%' }}>
+      <Card title="Загрузить новое фоновое изображение">
+        <Upload {...uploadProps} showUploadList={false}>
+          <Button icon={<UploadOutlined />} loading={loading}>
+            Нажмите для загрузки
+          </Button>
+        </Upload>
+      </Card>
+
+      <Card title="Список фоновых изображений">
+        <Table
+          dataSource={backgrounds}
+          columns={columns}
+          rowKey="id"
+          loading={loading}
+          pagination={{ pageSize: 5 }}
+        />
+      </Card>
+
+      <Card title="Настройки отображения активного изображения">
+        <Form form={form} layout="vertical">
+          <Form.Item name="blur_amount" label="Размытие (px)" rules={[{ type: 'float', min: 0, max: 20 }]}>
+            <Slider min={0} max={20} step={0.5} />
+          </Form.Item>
+          <Form.Item name="scale_factor" label="Масштаб (x)" rules={[{ type: 'float', min: 0.5, max: 2 }]}>
+            <Slider min={0.5} max={2} step={0.01} />
+          </Form.Item>
+          <Form.Item>
+            <Button type="primary" onClick={handleSaveSettings} disabled={!activeImageId}>
+              Сохранить настройки на сервере
+            </Button>
+          </Form.Item>
+        </Form>
+        {/* Предварительный просмотр (локально, на основе данных активного изображения) */}
+        <div style={{ marginTop: 16 }}>
+          <Text type="secondary">Предварительный просмотр (локально):</Text>
+          <div
+            style={{
+              height: '200px',
+              border: '1px solid #eee',
+              borderRadius: '4px',
+              overflow: 'hidden',
+              backgroundImage: activeImageForPreview ? `url(${activeImageForPreview.image})` : 'none',
+              backgroundSize: 'cover',
+              backgroundPosition: 'center',
+              backgroundRepeat: 'no-repeat',
+              // Используем данные из activeImageForPreview, а не из формы
+              filter: `blur(${activeImageForPreview?.blur_amount || 0}px)`,
+              backgroundSize: `${(activeImageForPreview?.scale_factor || 1) * 100}% auto`,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              color: 'white',
+              fontSize: '16px',
+              fontWeight: 'bold',
+              textShadow: '1px 1px 2px rgba(0,0,0,0.7)',
+            }}
+          >
+            {activeImageForPreview ? 'Предпросмотр фона' : 'Активное изображение не выбрано'}
+          </div>
+        </div>
+      </Card>
+    </Space>
+  );
+}
+// ... остальная часть AdminPanelPage.jsx ...

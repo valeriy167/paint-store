@@ -21,11 +21,18 @@ from products.views import ProductViewSet
 from reviews.views import ReviewViewSet
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
+from rest_framework.routers import DefaultRouter
+#from . import views
+from contacts import views as contacts_views
+from site_settings.views import BackgroundImageViewSet 
+from django.conf import settings # Импортируем настройки
+from django.conf.urls.static import static # Импортируем static
 
 # Router для ViewSets
 router = routers.DefaultRouter()
 router.register(r'products', ProductViewSet)
 router.register(r'reviews', ReviewViewSet, basename='review')
+router.register(r'background-images', BackgroundImageViewSet, basename='background-image')
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -38,4 +45,12 @@ urlpatterns = [
     path('api/schema/swagger/', SpectacularSwaggerView.as_view(url_name='schema'), name='swagger-ui'),
     path('api/cart/', include('cart.urls')),
     path('api/reviews/', include('reviews.urls')),
+    path('api/site/settings/', contacts_views.contact_info_view),  # GET
+    path('api/site/settings/', contacts_views.contact_info_update), # PUT
 ]
+
+# Добавляем URL для медиафайлов в DEBUG режиме
+# Это важно: этот код обслуживает файлы из MEDIA_ROOT по MEDIA_URL
+# Только в DEBUG! В продакшене файлы должны обслуживаться веб-сервером (nginx, Apache).
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

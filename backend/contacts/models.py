@@ -9,7 +9,10 @@ class ContactInfo(models.Model):
     whatsapp = models.CharField("WhatsApp", max_length=20, blank=True)
     telegram = models.CharField("Telegram", max_length=50, blank=True)
     working_hours = models.TextField("Часы работы", blank=True)
-
+    bg_image_url = models.URLField("Фон", blank=True)
+    bg_blur = models.PositiveSmallIntegerField("Размытие", default=4)
+    bg_opacity = models.FloatField("Прозрачность", default=0.2)
+    
     class Meta:
         verbose_name = "Контактная информация"
         verbose_name_plural = "Контактная информация"
