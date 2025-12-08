@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react';
-import { Card, List, Rate, Typography, message, Spin, Alert } from 'antd';
+import { Card, List, Rate, Typography, message, Spin, Alert, Select } from 'antd';
 import { useAuth } from '../contexts/AuthContext';
 import { api } from '../services/api';
 import { CommentOutlined } from '@ant-design/icons';
 
 const { Title, Text } = Typography;
+const { Option } = Select;
 
 export default function ReviewsPage() {
   const { user } = useAuth();
@@ -81,11 +82,19 @@ export default function ReviewsPage() {
 // Форма отзыва
 function ReviewForm({ onNewReview }) {
   const [loading, setLoading] = useState(false);
+  const [products, setProducts] = useState([]);
   const [formData, setFormData] = useState({
     product_id: '',
     rating: 5,
     text: ''
   });
+
+  // Загружаем товары при монтировании
+  useEffect(() => {
+    api.getProducts()
+      .then(setProducts)
+      .catch(err => console.error('Не удалось загрузить товары:', err));
+  }, []);
 
   const handleSubmit = async () => {
     if (!formData.product_id || !formData.text.trim()) {
@@ -109,17 +118,18 @@ function ReviewForm({ onNewReview }) {
   return (
     <Card title="Оставить отзыв" style={{ marginBottom: 32 }}>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-        <select
-          value={formData.product_id}
-          onChange={e => setFormData({ ...formData, product_id: e.target.value })}
-          style={{ padding: '8px 12px', border: '1px solid #d9d9d9', borderRadius: 4 }}
-        >
-          <option value="">Выберите товар</option>
-          {/* В реальном проекте — загрузить товары через api.getProducts() */}
-          <option value="1">Эмаль ПФ-115 белая</option>
-          <option value="2">Грунт ГФ-021 серый</option>
-          <option value="3">Лак ПУ-258 глянцевый</option>
-        </select>
+        <Select
+            value={formData.product_id}
+            onChange={value => setFormData({ ...formData, product_id: value })}
+            placeholder="Выберите товар"
+            style={{ width: '100%' }}
+            >
+            {products.map(product => (
+                <Option key={product.id} value={product.id}>
+                {product.name}
+                </Option>
+            ))}
+        </Select>
 
         <div>
           <Text>Оценка:</Text>

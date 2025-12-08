@@ -25,7 +25,7 @@ from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
 # Router для ViewSets
 router = routers.DefaultRouter()
 router.register(r'products', ProductViewSet)
-router.register(r'reviews', ReviewViewSet)
+router.register(r'reviews', ReviewViewSet, basename='review')
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -37,4 +37,5 @@ urlpatterns = [
     path('api/schema/', SpectacularAPIView.as_view(), name='schema'),
     path('api/schema/swagger/', SpectacularSwaggerView.as_view(url_name='schema'), name='swagger-ui'),
     path('api/cart/', include('cart.urls')),
+    path('api/reviews/', include('reviews.urls')),
 ]

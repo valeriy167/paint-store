@@ -6,6 +6,7 @@ from django.contrib.auth.models import User
 from .models import Review
 from .serializers import ReviewSerializer
 from accounts.permissions import IsModerator
+from django_filters.rest_framework import DjangoFilterBackend
 
 class ReviewViewSet(viewsets.ModelViewSet):
     queryset = Review.objects.all()
@@ -14,7 +15,7 @@ class ReviewViewSet(viewsets.ModelViewSet):
     def get_permissions(self):
         if self.action in ['list', 'retrieve']:
             return [AllowAny()] # ← публично: все видят одобренные отзывы
-        if self.action == 'create':
+        if self.action in ['create', 'my']:
             return [IsAuthenticated()]  # ← писать — только авторизованным
         # approve, pending — только модераторы (проверка в экшенах)
         if self.action in ['approve', 'pending_reviews']:
@@ -50,4 +51,11 @@ class ReviewViewSet(viewsets.ModelViewSet):
         review.moderated_at = request.user.date_joined  # или timezone.now()
         review.save()
         serializer = self.get_serializer(review)
+        return Response(serializer.data)
+
+    @action(detail=False, methods=['get'])
+    def my(self, request):
+        """GET /api/reviews/my/ — только отзывы текущего пользователя"""
+        reviews = Review.objects.filter(user=request.user)
+        serializer = self.get_serializer(reviews, many=True)
         return Response(serializer.data)

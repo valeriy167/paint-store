@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, Typography, List, Space, Button, Form, Input, message, Alert } from 'antd';
-import { UserOutlined, CommentOutlined, ShoppingCartOutlined, LogoutOutlined, EditOutlined } from '@ant-design/icons';
+import { UserOutlined, CommentOutlined, ShoppingCartOutlined, LogoutOutlined, EditOutlined, PhoneOutlined } from '@ant-design/icons';
 import { api } from '../services/api';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -13,6 +13,24 @@ export default function ProfilePage() {
   const [reviews, setReviews] = useState([]);
   const [loading, setLoading] = useState(true);
   const [form] = Form.useForm();
+
+  const handleUpdateUser = async (values) => {
+    // Отправляем ТОЛЬКО разрешённые поля
+    const payload = {
+        first_name: values.first_name || '',
+        last_name: values.last_name || '',
+        email: values.email // ← email можно менять
+    };
+    try {
+        await api.updateUser(payload);
+        message.success('Личные данные обновлены');
+        // Обновим данные — проще всего перезагрузить страницу
+        window.location.reload();
+    } catch (err) {
+        const msg = err?.email?.[0] || err?.detail || 'Не удалось сохранить данные';
+        message.error(msg);
+    }
+    };
 
   useEffect(() => {
     if (!user) return;
@@ -44,7 +62,7 @@ export default function ProfilePage() {
   };
 
   if (!user) {
-    return <Alert message="Ошибка" description="Вы не авторизованы" type="error" />;
+    return <Alert title="Ошибка" description="Вы не авторизованы" type="error" />;
   }
 
   return (
@@ -55,31 +73,61 @@ export default function ProfilePage() {
 
       <Space direction="vertical" size="large" style={{ width: '100%' }}>
 
-        {/* Основная информация */}
-        <Card title={<><UserOutlined /> Основная информация</>}>
-          <Space direction="vertical">
-            <Text><strong>Логин:</strong> {user.username}</Text>
-            <Text><strong>Email:</strong> {user.email || '—'}</Text>
-            <Text><strong>Имя:</strong> {user.first_name} {user.last_name}</Text>
-            <Text><strong>Роль:</strong> {user.profile?.is_moderator ? 'Администратор' : 'Покупатель'}</Text>
-          </Space>
-        </Card>
-
-        {/* Редактирование профиля */}
-        <Card title={<><EditOutlined /> Контактные данные</>}>
-          <Form form={form} layout="vertical" onFinish={handleUpdateProfile}>
-            <Form.Item name="phone" label="Телефон">
-              <Input placeholder="+7 (999) 123-45-67" />
+        {/* Основная информация (ФИО, email) */}
+        <Card title={<><EditOutlined /> Личные данные</>}>
+        <Form
+            layout="vertical"
+            onFinish={handleUpdateUser}
+            initialValues={{
+            first_name: user.first_name || '',
+            last_name: user.last_name || '',
+            email: user.email || ''
+            }}
+        >
+            <Form.Item name="first_name" label="Имя">
+            <Input />
             </Form.Item>
-            <Form.Item name="telegram" label="Telegram">
-              <Input placeholder="@username" />
+            <Form.Item name="last_name" label="Фамилия">
+            <Input />
+            </Form.Item>
+            <Form.Item
+            name="email"
+            label="Email"
+            rules={[{ type: 'email', message: 'Некорректный email' }]}
+            >
+            <Input />
             </Form.Item>
             <Form.Item>
-              <Button type="primary" htmlType="submit">
-                Сохранить изменения
-              </Button>
+            <Button type="primary" htmlType="submit">
+                Сохранить личные данные
+            </Button>
             </Form.Item>
-          </Form>
+        </Form>
+        </Card>
+
+        {/* Контактная информация (телефон, Telegram) */}
+        <Card title={<><PhoneOutlined /> Контакты</>}>
+        <Form
+            form={form}
+            layout="vertical"
+            onFinish={handleUpdateProfile}
+            initialValues={{
+            phone: user.profile?.phone || '',
+            telegram: user.profile?.telegram || ''
+            }}
+        >
+            <Form.Item name="phone" label="Телефон">
+            <Input placeholder="+7 (999) 123-45-67" />
+            </Form.Item>
+            <Form.Item name="telegram" label="Telegram">
+            <Input placeholder="@username" />
+            </Form.Item>
+            <Form.Item>
+            <Button type="primary" htmlType="submit">
+                Сохранить контакты
+            </Button>
+            </Form.Item>
+        </Form>
         </Card>
 
         {/* Мои отзывы */}
@@ -140,7 +188,6 @@ export default function ProfilePage() {
   );
 }
 
-// Вспомогательный компонент (если не используешь Rate глобально)
 function Rate({ value }) {
   return (
     <span>

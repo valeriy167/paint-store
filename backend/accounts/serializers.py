@@ -59,3 +59,17 @@ class RegisterSerializer(serializers.ModelSerializer):
             user.profile.save()
 
         return user
+
+
+class UserUpdateSerializer(serializers.ModelSerializer):
+    # Не требуем пароль для обновления профиля
+    class Meta:
+        model = User
+        fields = ['first_name', 'last_name', 'email']
+        # email можно менять, но, например, username — лучше нет (чтобы не сломать login)
+
+    def validate_email(self, value):
+        user = self.context['request'].user
+        if User.objects.filter(email=value).exclude(pk=user.pk).exists():
+            raise serializers.ValidationError("Пользователь с таким email уже существует.")
+        return value

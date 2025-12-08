@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Card, List, Button, Typography, Space, InputNumber, Alert, message } from 'antd';
+import { Card, List, Button, Typography, Space, InputNumber, Alert, message, Modal, Form, Input } from 'antd';
 import { MinusOutlined, PlusOutlined, DeleteOutlined, ShoppingCartOutlined } from '@ant-design/icons';
 import { api } from '../services/api';
 import { useAuth } from '../contexts/AuthContext';
@@ -12,6 +12,23 @@ export default function CartPage() {
   const { user } = useAuth();
   const [cart, setCart] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [confirmLoading, setConfirmLoading] = useState(false);
+  const [form] = Form.useForm();
+
+  const handleCheckout = async (values) => {
+    setConfirmLoading(true);
+    try {
+        await api.checkout(values);
+        message.success('Заказ оформлен! Администратор свяжется с вами.');
+        setIsModalOpen(false);
+        loadCart(); // обновим корзину
+    } catch (err) {
+        message.error(err.message || 'Не удалось оформить заказ');
+    } finally {
+        setConfirmLoading(false);
+    }
+    };
 
   const loadCart = () => {
     setLoading(true);
@@ -53,15 +70,11 @@ export default function CartPage() {
 
       {cart.items.length === 0 ? (
         <Card>
-          <Alert
-            message="Корзина пуста"
-            description={
-              <>
-                <p>Добавьте товары на <a onClick={() => navigate('/')}>главной странице</a>.</p>
-              </>
-            }
-            type="info"
-            showIcon
+          <Alert 
+            title={<strong>Корзина пуста</strong>}  
+            description="Добавьте товары на главной странице." 
+            type="info" 
+            showIcon 
           />
         </Card>
       ) : (
@@ -119,15 +132,57 @@ export default function CartPage() {
               </Title>
             </Space>
             <Button 
-              type="primary" 
-              size="large" 
-              icon={<ShoppingCartOutlined />}
-              style={{ marginTop: 16 }}
-              onClick={() => message.info('Оформление заказа — в будущем')}
-            >
-              Оформить заказ
+                type="primary" 
+                size="large" 
+                icon={<ShoppingCartOutlined />}
+                onClick={() => setIsModalOpen(true)}
+                disabled={cart?.items.length === 0}
+                >
+                Оформить заказ
             </Button>
           </Card>
+          <Modal
+            title="Оформление заказа"
+            open={isModalOpen}
+            onOk={() => form.submit()}
+            confirmLoading={confirmLoading}
+            onCancel={() => setIsModalOpen(false)}
+            okText="Отправить"
+            cancelText="Отмена"
+            >
+            <Form form={form} layout="vertical" onFinish={handleCheckout}>
+                <Form.Item 
+                name="name" 
+                label="Имя" 
+                initialValue={user?.first_name || ''}
+                rules={[{ required: true }]}
+                >
+                <Input />
+                </Form.Item>
+                <Form.Item 
+                name="email" 
+                label="Email" 
+                initialValue={user?.email || ''}
+                rules={[{ required: true, type: 'email' }]}
+                >
+                <Input />
+                </Form.Item>
+                <Form.Item 
+                name="phone" 
+                label="Телефон" 
+                initialValue={user?.profile?.phone || ''}
+                rules={[{ required: true }]}
+                >
+                <Input />
+                </Form.Item>
+                <Alert 
+                message="Заказ будет отправлен администратору. С вами свяжутся для подтверждения."
+                type="info"
+                showIcon
+                />
+            </Form>
+          </Modal>
+
         </>
       )}
     </div>
