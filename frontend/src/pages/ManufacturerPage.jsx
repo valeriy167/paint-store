@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Row, Col, Typography, Spin, Alert, message } from 'antd';
+import { Row, Col, Typography, Spin, Alert, message, Input, Select, Space } from 'antd';
 import ProductCard from '../components/ui/ProductCard';
 import { api } from '../services/api';
 
@@ -13,30 +13,38 @@ export default function ManufacturerPage() {
   const [manufacturer, setManufacturer] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState(null);
 
   useEffect(() => {
     if (!manufacturerId) {
-        navigate('/'); // Если ID не передан, вернуть на главную
+        navigate('/');
         return;
     }
     setLoading(true);
     setError(null);
+    setProducts([]); // Сбросим продукты
+    setManufacturer(null); // Сбросим производителя
 
-    // Загружаем товары по производителю
+    // Сначала загружаем товары по производителю
     api.getProductsByManufacturer(manufacturerId)
       .then(data => {
         setProducts(data);
-        // Также загрузим данные самого производителя для отображения
-        // Можно сделать отдельный запрос или вернуть производителя вместе с товаром
-        // Пока просто возьмём из первого товара, если он есть
+        // Если товары есть, получаем информацию о производителе из первого товара
         if (data.length > 0 && data[0].manufacturer) {
             setManufacturer(data[0].manufacturer);
+            setLoading(false); // Загрузка завершена, т.к. мы получили и товары, и инфо о производителе
         } else {
-            // Если товары не найдены, но ID валидный, можно попробовать загрузить саму сущность производителя
-            // Это требует отдельного API endpoint или изменения логики
-            // Для простоты, если товары не найдены, просто покажем заголовок с ID
-            setManufacturer({ id: manufacturerId, name: `Производитель ${manufacturerId}` });
+            // Если товаров нет, загружаем информацию о производителе отдельно
+            return api.getManufacturerInfo(manufacturerId);
         }
+      })
+      .then(manufacturerData => {
+        // Этот .then сработает, только если товары не были найдены (т.е. сработал return api.getManufacturerInfo)
+        if (manufacturerData) {
+            setManufacturer(manufacturerData);
+        }
+        // В любом случае, загрузка завершена
         setLoading(false);
       })
       .catch(err => {
@@ -45,50 +53,116 @@ export default function ManufacturerPage() {
       });
   }, [manufacturerId, navigate]);
 
+  const categories = useMemo(() => {
+    const uniqueCategories = [...new Set(products.map(p => p.category))];
+    return uniqueCategories.filter(cat => cat && typeof cat === 'string');
+  }, [products]);
+
+  const filteredProducts = useMemo(() => {
+    return products.filter(product => {
+      const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase());
+      const matchesCategory = selectedCategory === null || product.category === selectedCategory;
+      return matchesSearch && matchesCategory;
+    });
+  }, [products, searchTerm, selectedCategory]);
+
   if (loading) return <Spin size="large" style={{ display: 'block', margin: '60px auto' }} />;
-  if (error) return <Alert title="Ошибка загрузки товаров" description={error} type="error" showIcon style={{ margin: 24 }} />;
+  if (error) return <Alert title="Ошибка" description={error} type="error" showIcon style={{ margin: 24 }} />;
 
   return (
+    // ... JSX ...
     <div style={{ padding: '24px 0' }}>
       {/* Заголовок с информацией о производителе */}
-      {manufacturer && (
-        <div style={{
+      {manufacturer && ( // Отображаем только если manufacturer !== null
+        <div 
+            style={{
             textAlign: 'center',
             marginBottom: 32,
-            padding: '16px',
+            padding: '24px 16px',
             borderRadius: '8px',
             background: 'rgba(255, 255, 255, 0.8)',
-            maxWidth: 'fit-content',
+            maxWidth: '800px',
             margin: '0 auto',
-          }}>
-          <Title level={2} style={{ margin: 0 }}>
-            {manufacturer.name}
-          </Title>
+          }}
+        >
+          {/* Логотип */}
           {manufacturer.logo && (
-            <div style={{ marginTop: 16 }}>
+            <div style={{ marginBottom: 16 }}>
               <img
                 src={manufacturer.logo}
                 alt={manufacturer.name}
-                style={{ maxHeight: '100px', objectFit: 'contain' }}
+                style={{ 
+                    objectFit: 'contain', 
+                    maxWidth: '100%',
+                    boxShadow: '0 0 20px 10px rgba(0, 0, 0, 0.3)',
+                    borderRadius: '8px',
+                 }}
               />
             </div>
           )}
+          {/* Название */}
+          <Title level={2} style={{ margin: '8px 0' }}>
+            {manufacturer.name} 
+          </Title>
+          {/* Описание */}
           {manufacturer.description && (
             <div style={{ marginTop: 16 }}>
               <Typography.Text type="secondary">{manufacturer.description}</Typography.Text>
             </div>
           )}
+                {/* Фильтры */}
+            {/* ... JSX фильтров ... */}
+            <div style={{  
+                textAlign: 'center',
+                marginTop: 32,
+                padding: '16px',
+                borderRadius: '8px',
+                //background: 'rgba(255, 255, 255, 0.8)',
+                maxWidth: 'fit-content',
+                margin: '0 auto',
+                }}>
+                <Space size="middle" style={{ width: '100%', justifyContent: 'center', flexWrap: 'wrap' }}>
+                <div style={{ display: 'flex', alignItems: 'center' }}>
+                    <label htmlFor="search-input" style={{ marginRight: 8 }}>Поиск:</label>
+                    <Input
+                    id="search-input"
+                    placeholder="Введите название товара"
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    style={{ width: 200 }}
+                    />
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center' }}>
+                    <label htmlFor="category-select" style={{ marginRight: 8 }}>Категория:</label>
+                    <Select
+                    id="category-select"
+                    placeholder="Выберите категорию"
+                    value={selectedCategory}
+                    onChange={setSelectedCategory}
+                    allowClear
+                    style={{ width: 200 }}
+                    >
+                    {categories.map(category => (
+                        <Select.Option key={category} value={category}>
+                        {category}
+                        </Select.Option>
+                    ))}
+                    </Select>
+                </div>
+                </Space>
+            </div>
         </div>
       )}
 
-      {products.length === 0 ? (
-        <Alert title="Нет товаров" description="У этого производителя пока нет товаров в продаже." type="info" showIcon style={{ margin: 24 }} />
+      {/* Условие "Нет товаров" */}
+      {filteredProducts.length === 0 ? (
+        <Alert title="Нет товаров" description={products.length === 0 ? "У этого производителя пока нет товаров в продаже." : "Нет товаров, соответствующих фильтрам"} type="info" showIcon style={{ margin: 24 }} />
       ) : (
         <Row
           gutter={[24, 32]}
           justify="center"
         >
-          {products.map(product => (
+          {filteredProducts.map(product => (
             <Col
               key={product.id}
               xs={24}

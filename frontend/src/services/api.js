@@ -1,24 +1,28 @@
 const BASE_URL = 'http://localhost:8000/api';
 
 // --- Вспомогательные функции для авторизованных запросов ---
-const getAuthHeaders = () => ({
-  'Authorization': `Bearer ${localStorage.getItem('access')}`,
-});
+const getAuthHeaders = () => {
+  const token = localStorage.getItem('access');
+  if (token) {
+    return { 'Authorization': `Bearer ${token}` };
+  }
+  return {}; // Возвращаем пустой объект, если токена нет
+};
 
 const getOptions = (additionalHeaders = {}) => ({
   method: 'GET',
   headers: {
     'Content-Type': 'application/json',
-    ...getAuthHeaders(),
+    ...getAuthHeaders(), // <-- Добавится только если токен есть
     ...additionalHeaders,
   },
 });
 
 const postOptions = (body, isFormData = false) => ({
   method: 'POST',
-  headers: isFormData ? getAuthHeaders() : { // Для FormData Content-Type ставит браузер
+  headers: isFormData ? getAuthHeaders() : { // Для FormData тоже проверяем токен
     'Content-Type': 'application/json',
-    ...getAuthHeaders(),
+    ...getAuthHeaders(), // <-- Добавится только если токен есть
   },
   body: isFormData ? body : JSON.stringify(body),
 });
@@ -27,7 +31,7 @@ const putOptions = (body) => ({
   method: 'PUT',
   headers: {
     'Content-Type': 'application/json',
-    ...getAuthHeaders(),
+    ...getAuthHeaders(), // <-- Добавится только если токен есть
   },
   body: JSON.stringify(body),
 });
@@ -36,14 +40,14 @@ const patchOptions = (body) => ({
   method: 'PATCH',
   headers: {
     'Content-Type': 'application/json',
-    ...getAuthHeaders(),
+    ...getAuthHeaders(), // <-- Добавится только если токен есть
   },
   body: JSON.stringify(body),
 });
 
 const deleteOptions = () => ({
   method: 'DELETE',
-  headers: getAuthHeaders(),
+  headers: getAuthHeaders(), // <-- Добавится только если токен есть
 });
 
 export const api = {
@@ -366,10 +370,12 @@ export const api = {
         return response.json();
     }),
 
-    getActiveBackgroundImage: () => fetch(`${BASE_URL}/background-images/active/`, getOptions()).then(response => {
-      if (!response.ok) throw new Error('Не удалось загрузить активное фоновое изображение');
-      return response.json(); // Ожидаем { image: '...', blur_amount: ..., scale_factor: ... }
-  }),
+  // Метод для получения активного фона (публичный)
+  getActiveBackgroundImage: () => fetch(`${BASE_URL}/background-images/active/`, getOptions()) // Использует getOptions
+    .then(response => {
+        if (!response.ok) throw new Error('Не удалось загрузить активное фоновое изображение');
+        return response.json();
+    }),
 
 
   updateBackgroundImage: (id, data) => fetch(`${BASE_URL}/background-images/${id}/`, patchOptions(data)) // Используем patchOptions
@@ -388,9 +394,11 @@ export const api = {
     }),
 
   // --- Новые функции для работы с производителями ---
-  getManufacturers: () => fetch(`${BASE_URL}/manufacturers/`, getOptions()).then(response => response.json()),
+  // Методы для производителей (публичные)
+  getManufacturers: () => fetch(`${BASE_URL}/manufacturers/`, getOptions()) // Использует getOptions
+    .then(response => response.json()),
 
- createManufacturer: (data) => {
+  createManufacturer: (data) => {
     // data может быть FormData или обычным объектом
     const isFormData = data instanceof FormData;
     return fetch(`${BASE_URL}/manufacturers/`, {
@@ -416,6 +424,16 @@ export const api = {
     });
   },
 
+  // --- Функция для получения информации о производителе по ID ---
+  getManufacturerInfo: (id) => fetch(`${BASE_URL}/manufacturers/${id}/info/`, getOptions()) // Использует getOptions
+    .then(response => {
+        if (!response.ok) {
+            if (response.status === 404) throw new Error('Производитель не найден');
+            throw new Error('Не удалось загрузить информацию о производителе');
+        }
+        return response.json();
+    }),
+    
   deleteManufacturer: (id) => fetch(`${BASE_URL}/manufacturers/${id}/`, deleteOptions()),
   getProductsByManufacturer: (manufacturerId) => fetch(`${BASE_URL}/products/?manufacturer_id=${manufacturerId}`, getOptions()).then(response => response.json()),
 

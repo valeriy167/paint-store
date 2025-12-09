@@ -1,4 +1,6 @@
-from rest_framework import viewsets
+from rest_framework import viewsets, status
+from rest_framework.response import Response
+from rest_framework.decorators import action
 from rest_framework.permissions import AllowAny
 from .models import Product, Manufacturer
 from .serializers import ProductSerializer, ManufacturerSerializer
@@ -30,6 +32,26 @@ class ManufacturerViewSet(viewsets.ModelViewSet):
     queryset = Manufacturer.objects.all()
     serializer_class = ManufacturerSerializer
 
-    # Требуем права модератора для всех действий
     def get_permissions(self):
-        return [IsModerator()]
+        """
+        Instantiates and returns the list of permissions that this view requires.
+        """
+        # Для действий, связанных с чтением (list, retrieve), разрешаем всем
+        if self.action in ['list', 'retrieve']:
+            permission_classes = [AllowAny]
+        # Для остальных действий (create, update, partial_update, destroy) - только модераторы
+        else:
+            permission_classes = [IsModerator]
+
+        # Возвращаем экземпляр класса разрешения
+        return [permission() for permission in permission_classes]
+    
+    @action(detail=True, methods=['get'], permission_classes=[AllowAny]) 
+    def info(self, request, pk=None):
+        """Возвращает информацию о производителе по его ID (pk)."""
+        try:
+            manufacturer = self.get_object() # Получаем производителя по pk
+            serializer = self.get_serializer(manufacturer)
+            return Response(serializer.data)
+        except Manufacturer.DoesNotExist:
+            return Response(status=status.HTTP_404_NOT_FOUND)
