@@ -17,7 +17,7 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, include
 from rest_framework import routers
-from products.views import ProductViewSet
+from products.views import ProductViewSet, ManufacturerViewSet
 from reviews.views import ReviewViewSet
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
@@ -31,6 +31,7 @@ from django.conf.urls.static import static # Импортируем static
 # Router для ViewSets
 router = routers.DefaultRouter()
 router.register(r'products', ProductViewSet)
+router.register(r'manufacturers', ManufacturerViewSet, basename='manufacturer')
 router.register(r'reviews', ReviewViewSet, basename='review')
 router.register(r'background-images', BackgroundImageViewSet, basename='background-image')
 

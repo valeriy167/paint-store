@@ -216,10 +216,10 @@ export const api = {
     return fetch(`${BASE_URL}/products/`, {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json',
+        'Content-Type': 'application/json', 
         'Authorization': `Bearer ${token}`
       },
-      body: JSON.stringify(data)
+      body: JSON.stringify(data) 
     }).then(res => {
       if (!res.ok) throw new Error('Не удалось создать товар');
       return res.json();
@@ -371,8 +371,6 @@ export const api = {
       return response.json(); // Ожидаем { image: '...', blur_amount: ..., scale_factor: ... }
   }),
 
-  // src/services/api.js
-// ... остальные методы ...
 
   updateBackgroundImage: (id, data) => fetch(`${BASE_URL}/background-images/${id}/`, patchOptions(data)) // Используем patchOptions
     .then(response => {
@@ -388,4 +386,38 @@ export const api = {
         }
         return response.json();
     }),
+
+  // --- Новые функции для работы с производителями ---
+  getManufacturers: () => fetch(`${BASE_URL}/manufacturers/`, getOptions()).then(response => response.json()),
+
+ createManufacturer: (data) => {
+    // data может быть FormData или обычным объектом
+    const isFormData = data instanceof FormData;
+    return fetch(`${BASE_URL}/manufacturers/`, {
+        method: 'POST',
+        headers: isFormData ? getAuthHeaders() : { 'Content-Type': 'application/json', ...getAuthHeaders() }, // Не устанавливаем Content-Type для FormData
+        body: isFormData ? data : JSON.stringify(data)
+    }).then(response => {
+        if (!response.ok) throw new Error('Не удалось создать производителя');
+        return response.json();
+    });
+  },
+
+  updateManufacturer: (id, data) => {
+    // data может быть FormData или обычным объектом
+    const isFormData = data instanceof FormData;
+    return fetch(`${BASE_URL}/manufacturers/${id}/`, {
+        method: 'PUT', // или PATCH, если используется частичное обновление
+        headers: isFormData ? getAuthHeaders() : { 'Content-Type': 'application/json', ...getAuthHeaders() }, // Не устанавливаем Content-Type для FormData
+        body: isFormData ? data : JSON.stringify(data)
+    }).then(response => {
+        if (!response.ok) throw new Error('Не удалось обновить производителя');
+        return response.json();
+    });
+  },
+
+  deleteManufacturer: (id) => fetch(`${BASE_URL}/manufacturers/${id}/`, deleteOptions()),
+  getProductsByManufacturer: (manufacturerId) => fetch(`${BASE_URL}/products/?manufacturer_id=${manufacturerId}`, getOptions()).then(response => response.json()),
+
+
 };

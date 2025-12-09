@@ -1,6 +1,6 @@
 // src/pages/AdminPanelPage.jsx
 import { useState, useEffect } from 'react';
-import { Tabs, Table, Form, Input, Button, Switch, Space, Card, Typography, message, Alert, Slider, Upload, Image } from 'antd';
+import { Tabs, Table, Form, Input, Button, Switch, Space, Card, Typography, message, Alert, Slider, Upload, Image, Select } from 'antd';
 import { useAuth } from '../contexts/AuthContext';
 import { api } from '../services/api'; 
 import {
@@ -59,7 +59,7 @@ export default function AdminPanelPage() {
       </div>
 
       <Tabs
-        style={{ background: 'rgba(255, 255, 255, 0.8)', borderRadius: '8px', margin: '0 auto', marginTop: 32}}
+        style={{ background: 'rgba(255, 255, 255, 0.8)', borderRadius: '8px', margin: '0 auto', marginTop: 32, marginLeft: 8}}
         defaultActiveKey="reviews"
         items={[
           {
@@ -81,7 +81,12 @@ export default function AdminPanelPage() {
             key: 'settings',
             label: 'Настройки',
             children: <SettingsTab />
-          }
+          },
+          {
+            key: 'manufacturers',
+            label: 'Производители',
+            children: <ManufacturersTab />
+          }, 
         ]}
       />
     </div>
@@ -191,10 +196,24 @@ function ReviewModerationTab() {
 
 // === Вкладка: Товары ===
 function ProductsTab() {
+  const [manufacturersList, setManufacturersList] = useState([]);
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [form] = Form.useForm();
   const [editingProduct, setEditingProduct] = useState(null);
+
+  // Загрузим список производителей при монтировании вкладки ProductsTab
+  useEffect(() => {
+    api.getProducts()
+      .then(setProducts)
+      .catch(err => message.error(err.message))
+      .finally(() => setLoading(false));
+
+    // Загрузка производителей
+    api.getManufacturers()
+      .then(setManufacturersList)
+      .catch(err => console.error('Ошибка загрузки производителей для формы:', err));
+  }, []);
 
   useEffect(() => {
     api.getProducts()
@@ -305,6 +324,18 @@ function ProductsTab() {
           </Form.Item>
           <Form.Item name="category" label="Категория">
             <Input placeholder="Эмаль, Грунт, Лак..." />
+          </Form.Item>
+          <Form.Item name="manufacturer_id" label="Производитель">
+            <Select
+              placeholder="Выберите производителя"
+              allowClear
+              showSearch
+              filterOption={(input, option) => option.children.toLowerCase().includes(input.toLowerCase())}
+            >
+              {manufacturersList.map(man => (
+                <Select.Option key={man.id} value={man.id}>{man.name}</Select.Option>
+              ))}
+            </Select>
           </Form.Item>
           <Form.Item name="image_url" label="Ссылка на изображение">
             <Input placeholder="https://example.com/image.jpg  " />
@@ -714,4 +745,265 @@ function SettingsTab() {
     </Space>
   );
 }
-// ... остальная часть AdminPanelPage.jsx ...
+
+
+// === Вкладка: Производители ===
+function ManufacturersTab() {
+  const [manufacturers, setManufacturers] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [form] = Form.useForm();
+  const [editingManufacturer, setEditingManufacturer] = useState(null);
+
+  const loadManufacturers = () => {
+    setLoading(true);
+    api.getManufacturers()
+      .then(setManufacturers)
+      .catch(err => message.error(err.message))
+      .finally(() => setLoading(false));
+  };
+
+  useEffect(() => {
+    loadManufacturers();
+  }, []);
+
+  const handleCreate = async (values) => {
+    const formData = new FormData();
+    formData.append('name', values.name);
+    if (values.description) {
+        formData.append('description', values.description);
+    }
+
+    console.log("Values перед обработкой logo:", values.logo); 
+
+    // --- Обновлённая логика обработки файла logo ---
+    // values.logo теперь *является* fileList из-за valuePropName="fileList"
+    if (values.logo && Array.isArray(values.logo) && values.logo.length > 0) { // <-- Изменено: values.logo.fileList -> values.logo
+        const fileEntry = values.logo[0]; // Получаем первый элемент массива
+        const file = fileEntry.originFileObj; // Получаем оригинальный File объект из этого элемента
+        console.log("Обнаружен файл в элементе fileList:", file); // <-- Обновлённый лог
+        if (file) {
+            formData.append('logo', file, file.name); // <-- Добавлено имя файла
+            console.log("Файл добавлен в formData"); 
+        } else {
+            console.log("File object (originFileObj) не найден в элементе fileList");
+        }
+    } else {
+        console.log("Logo не выбран или массив fileList пуст");
+    }
+
+    try {
+      await api.createManufacturer(formData);
+      message.success('Производитель добавлен');
+      form.resetFields();
+      setEditingManufacturer(null);
+      loadManufacturers();
+    } catch (err) {
+      console.error("Ошибка создания производителя:", err);
+      message.error(err.message || 'Не удалось добавить производителя');
+    }
+  };
+
+  const handleUpdate = async (values) => {
+    if (!editingManufacturer) return;
+    const formData = new FormData();
+    formData.append('name', values.name);
+    if (values.description) {
+        formData.append('description', values.description);
+    }
+
+    console.log("Values перед обработкой logo в handleUpdate:", values.logo); // <-- Лог для handleUpdate
+
+    // --- Обновлённая логика обработки файла logo (аналогично handleCreate) ---
+    // values.logo теперь *является* fileList из-за valuePropName="fileList"
+    if (values.logo && Array.isArray(values.logo) && values.logo.length > 0) {
+        const fileEntry = values.logo[0];
+        const file = fileEntry.originFileObj;
+        if (file) {
+            formData.append('logo', file, file.name);
+            console.log("Файл обновления добавлен в formData");
+        } else {
+            console.log("File object (originFileObj) не найден в элементе fileList при обновлении");
+            // Если originFileObj нет, но файл уже был загружен, можно отправить только его имя или ничего не отправлять
+            // В зависимости от логики бэкенда. DRF обычно не перезаписывает файл, если поле не передано.
+            // Если нужно гарантированно обновить/очистить, нужно отправить соответствующее значение.
+        }
+    } else {
+        console.log("Logo не выбран или массив fileList пуст при обновлении");
+        // Если fileList пуст, и вы хотите очистить логотип, отправьте специальное значение или null
+        // formData.append('logo', ''); // <-- Пример отправки пустого значения, если бэкенд это обрабатывает
+    }
+
+    try {
+      await api.updateManufacturer(editingManufacturer.id, formData);
+      message.success('Производитель обновлён');
+      setEditingManufacturer(null);
+      form.resetFields();
+      loadManufacturers();
+    } catch (err) {
+      console.error("Ошибка обновления производителя:", err);
+      message.error(err.message || 'Не удалось обновить производителя');
+    }
+  };
+
+  const handleDelete = async (id) => {
+    try {
+      await api.deleteManufacturer(id);
+      message.success('Производитель удалён');
+      setManufacturers(manufacturers.filter(m => m.id !== id));
+    } catch (err) {
+      message.error(err.message);
+    }
+  };
+
+  const startEditing = (manufacturer) => {
+    // Форматируем данные для формы
+    const formValues = {
+      name: manufacturer.name,
+      description: manufacturer.description,
+      // logo: manufacturer.logo, // <-- Старый способ, неправильный для Upload
+    };
+
+    // Если у производителя есть логотип, форматируем его для Upload
+    if (manufacturer.logo) {
+      // Создаём объект файла в формате, который ожидает Upload
+      // uid необходим, name и url тоже полезны
+      const logoFileList = [{
+        uid: `existing-${manufacturer.id}`, // Уникальный ID, можно использовать ID производителя или другой
+        name: manufacturer.logo.split('/').pop(), // Извлекаем имя файла из URL
+        status: 'done', // Статус 'done' означает, что файл успешно загружен
+        url: manufacturer.logo, // URL существующего файла
+        // originFileObj не нужен для уже загруженного файла, но можно попробовать создать Blob
+        // originFileObj: new Blob(), // <-- Необязательно и может быть неэффективно
+      }];
+      formValues.logo = logoFileList; // <-- Устанавливаем сформированный fileList
+    } else {
+      formValues.logo = []; // Если логотипа нет, устанавливаем пустой массив
+    }
+
+    setEditingManufacturer(manufacturer);
+    form.setFieldsValue(formValues); // <-- Передаём отформатированные значения
+  };
+
+  const uploadProps = {
+    beforeUpload: (file) => {
+      const isImage = file.type.startsWith('image/');
+      if (!isImage) {
+        message.error('Вы можете загружать только изображения!');
+      }
+      return false; // Разрешаем или запрещаем стандартную загрузку
+    },
+    onChange: async ({ file }) => {
+      if (file.status === 'done') {
+        // Логика для обработки успешной загрузки, если нужно
+      } else if (file.status === 'error') {
+        message.error(`${file.name} загрузка не удалась.`);
+      }
+    },
+  };
+
+  const columns = [
+    {
+      title: 'Логотип',
+      key: 'logo',
+      render: (_, record) => record.logo ? (
+        <Image
+          src={record.logo}
+          alt={record.name}
+          style={{ width: 40, height: 40, objectFit: 'contain' }}
+          fallback="https://via.placeholder.com/40" // Заглушка
+        />
+      ) : '—'
+    },
+    { title: 'ID', dataIndex: 'id', key: 'id' },
+    { title: 'Название', dataIndex: 'name', key: 'name' },
+    { title: 'Описание', dataIndex: 'description', key: 'description', ellipsis: true },
+    {
+      title: 'Действия',
+      key: 'actions',
+      render: (_, record) => (
+        <Space>
+          <Button
+            size="small"
+            icon={<EditOutlined />}
+            onClick={() => startEditing(record)}
+          >
+          </Button>
+          <Button
+            danger
+            size="small"
+            icon={<DeleteOutlined />}
+            onClick={() => handleDelete(record.id)}
+          >
+          </Button>
+        </Space>
+      )
+    }
+  ];
+
+  return (
+    <Space direction="vertical" style={{ width: '100%' }}>
+      <Card title={editingManufacturer ? "Редактировать производителя" : "Добавить производителя"}>
+        <Form
+          form={form}
+          layout="vertical"
+          onFinish={editingManufacturer ? handleUpdate : handleCreate}
+        >
+          <Form.Item name="name" label="Название" rules={[{ required: true, message: 'Укажите название' }]}>
+            <Input placeholder="Название производителя" />
+          </Form.Item>
+          <Form.Item name="description" label="Описание">
+            <Input.TextArea rows={3} placeholder="Описание производителя..." />
+          </Form.Item>
+          
+          <Form.Item name="logo" label="Логотип" valuePropName="fileList" getValueFromEvent={(e) => {
+            console.log("getValueFromEvent:", e); // <-- Добавь лог
+            if (Array.isArray(e)) {
+              return e;
+            }
+            return e && e.fileList ? e.fileList : []; // Обычно e.fileList передаётся
+          }}>
+            <Upload
+              name="logo"
+              listType="picture"
+              maxCount={1}
+              {...uploadProps}
+            >
+              <Button icon={<UploadOutlined />}>Загрузить логотип</Button>
+            </Upload>
+          </Form.Item>
+
+          <Form.Item>
+            <Button
+              type="primary"
+              htmlType="submit"
+              icon={editingManufacturer ? <EditOutlined /> : <PlusOutlined />}
+            >
+              {editingManufacturer ? 'Сохранить изменения' : 'Добавить производителя'}
+            </Button>
+            {editingManufacturer && (
+              <Button
+                style={{ marginLeft: 8 }}
+                onClick={() => {
+                  setEditingManufacturer(null);
+                  form.resetFields();
+                }}
+              >
+                Отмена
+              </Button>
+            )}
+          </Form.Item>
+        </Form>
+      </Card>
+
+      <Card title="Список производителей">
+        <Table
+          dataSource={manufacturers}
+          columns={columns}
+          rowKey="id"
+          loading={loading}
+          pagination={{ pageSize: 10 }}
+        />
+      </Card>
+    </Space>
+  );
+}

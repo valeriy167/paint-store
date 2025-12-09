@@ -1,16 +1,26 @@
 import { useState, useEffect, useMemo } from 'react';
-import { Row, Col, Typography, Spin, Alert, message, Input, Select, Space } from 'antd'; // Добавлены Input, Select, Space
+import { Row, Col, Typography, Spin, Alert, message, Input, Select, Space, Carousel } from 'antd'; 
 import ProductCard from '../components/ui/ProductCard';
 import { api } from '../services/api';
+import { useNavigate } from 'react-router-dom';
 
 const { Title } = Typography;
 
 export default function HomePage() {
+  const navigate = useNavigate();
   const [products, setProducts] = useState([]);
+  const [manufacturers, setManufacturers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [searchTerm, setSearchTerm] = useState(''); // Состояние для поискового запроса
   const [selectedCategory, setSelectedCategory] = useState(null); // Состояние для выбранной категории (null означает "все")
+
+  // Загрузка производителей
+  useEffect(() => {
+    api.getManufacturers()
+      .then(setManufacturers)
+      .catch(err => console.error('Ошибка загрузки производителей:', err));
+  }, []);
 
   // Загрузка продуктов при монтировании компонента
   useEffect(() => {
@@ -48,6 +58,71 @@ export default function HomePage() {
   return (
     <div style={{ padding: '24px 0' }}>
 
+      {manufacturers.length > 0 && (
+        <div style={{ marginBottom: 32 }}>
+          <Title level={3} style={{ textAlign: 'center', marginBottom: 16 }}>Наши производители</Title>
+          <Carousel
+            autoplay
+            infinite
+            slidesToShow={5} // Показываем 5 карточек
+            slidesToScroll={1}
+            dots={true}
+            arrows={true}
+            responsive={[
+              {
+                breakpoint: 1200,
+                settings: { slidesToShow: 4, slidesToScroll: 1 }
+              },
+              {
+                breakpoint: 992,
+                settings: { slidesToShow: 3, slidesToScroll: 1 }
+              },
+              {
+                breakpoint: 768,
+                settings: { slidesToShow: 2, slidesToScroll: 1 }
+              },
+              {
+                breakpoint: 480,
+                settings: { slidesToShow: 1, slidesToScroll: 1 }
+              }
+            ]}
+            style={{ padding: '0 20px' }} // Отступы по бокам для стрелок
+          >
+            {manufacturers.map(manufacturer => (
+              <div key={manufacturer.id} style={{ padding: '0 8px' }}>
+                <div
+                  onClick={() => navigate(`/manufacturer/${manufacturer.id}`)} // Переход на страницу производителя
+                  style={{
+                    cursor: 'pointer',
+                    padding: '16px',
+                    textAlign: 'center',
+                    background: 'rgba(255, 255, 255, 0.7)',
+                    borderRadius: '8px',
+                    border: '1px solid #d9d9d9',
+                    transition: 'box-shadow 0.3s',
+                  }}
+                  onMouseEnter={(e) => e.currentTarget.style.boxShadow = '0 4px 8px rgba(0,0,0,0.1)'}
+                  onMouseLeave={(e) => e.currentTarget.style.boxShadow = 'none'}
+                >
+                  {manufacturer.logo ? (
+                    <img
+                      src={manufacturer.logo}
+                      alt={manufacturer.name}
+                      style={{ maxHeight: '60px', objectFit: 'contain', marginBottom: 8 }}
+                    />
+                  ) : (
+                    <div style={{ height: '60px', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 8 }}>
+                      <Typography.Text strong>{manufacturer.name}</Typography.Text>
+                    </div>
+                  )}
+                  <Typography.Text strong>{manufacturer.name}</Typography.Text>
+                </div>
+              </div>
+            ))}
+          </Carousel>
+        </div>
+      )}
+      
       {/* Заголовок */}
       <div style={{
           textAlign: 'center',
