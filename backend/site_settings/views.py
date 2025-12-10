@@ -4,11 +4,27 @@ from rest_framework.response import Response
 from rest_framework.decorators import action
 from .models import BackgroundImage
 from .serializers import BackgroundImageSerializer
+from rest_framework.permissions import AllowAny, IsAuthenticated
+from accounts.permissions import IsModerator 
+
 
 class BackgroundImageViewSet(viewsets.ModelViewSet):
     queryset = BackgroundImage.objects.all()
     serializer_class = BackgroundImageSerializer
 
+        # --- Установим разрешения для действий ---
+    def get_permissions(self):
+        # Разрешаем получение активного фона всем
+        if self.action == 'active_background':
+            permission_classes = [AllowAny]
+        # Остальные действия (create, update, partial_update, destroy) требуют аутентификации/модератора
+        elif self.action in ['create', 'update', 'partial_update', 'destroy']:
+            permission_classes = [IsModerator]
+        else:
+            # Для list, retrieve - можешь решить, нужно ли
+            permission_classes = [AllowAny] # Или другое разрешение
+        return [permission() for permission in permission_classes]
+    
     def create(self, request, *args, **kwargs):
         # Отключаем старое активное
         old_active = BackgroundImage.objects.filter(is_active=True).first()
@@ -39,8 +55,6 @@ class BackgroundImageViewSet(viewsets.ModelViewSet):
 
         # Если is_active не передан или не true, вызываем стандартный partial_update
         return super().partial_update(request, *args, **kwargs)
-
-    # ... другие методы ...
 
     @action(detail=False, methods=['get'], url_path='active')
     def active_background(self, request):

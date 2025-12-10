@@ -9,6 +9,7 @@ import RequireAuth from './components/auth/RequireAuth';
 import CartPage from './pages/CartPage';
 import AdminPanelPage from './pages/AdminPanelPage';
 import ProfilePage from './pages/ProfilePage';
+import ManufacturerPage from './pages/ManufacturerPage';
 
 export default function App() {
   return (
@@ -43,6 +44,7 @@ export default function App() {
               </RequireAuth>
             } 
           />
+          <Route path="/manufacturer/:manufacturerId" element={<ManufacturerPage />} />
           <Route path="*" element={<div>404 - Страница не найдена</div>} />
         </Routes>
       </Layout>
