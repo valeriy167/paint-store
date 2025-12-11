@@ -22,11 +22,10 @@ from reviews.views import ReviewViewSet
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
 from rest_framework.routers import DefaultRouter
-#from . import views
 from contacts import views as contacts_views
 from site_settings.views import BackgroundImageViewSet 
-from django.conf import settings # Импортируем настройки
-from django.conf.urls.static import static # Импортируем static
+from django.conf import settings 
+from django.conf.urls.static import static 
 
 # Router для ViewSets
 router = routers.DefaultRouter()

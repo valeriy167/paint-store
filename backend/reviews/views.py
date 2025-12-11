@@ -11,6 +11,8 @@ from django_filters.rest_framework import DjangoFilterBackend
 class ReviewViewSet(viewsets.ModelViewSet):
     queryset = Review.objects.all()
     serializer_class = ReviewSerializer
+    filter_backends = [DjangoFilterBackend] 
+    filterset_fields = ['product', 'is_approved']
 
     def get_permissions(self):
         if self.action in ['list', 'retrieve']:

@@ -53,16 +53,16 @@ export default function HomePage() {
   }, [products, searchTerm, selectedCategory]);
 
   if (loading) return <Spin size="large" style={{ display: 'block', margin: '60px auto' }} />;
-  if (error) return <Alert title="Ошибка загрузки товаров" description={error} type="error" showIcon style={{ margin: 24 }} />;
+  if (error) return <Alert title="Ошибка загрузки товаров" description={error} type="error" showIcon style={{ margin: 16 }} />;
 
   return (
     <div style={{ padding: '2px 0' }}>
 
       {manufacturers.length > 0 && (
-        <div style={{ marginBottom: 32 }}>
+        <div style={{ marginBottom: 16 }}>
           <div style={{
           textAlign: 'center',
-          marginBottom: 32,
+          marginBottom: 6,
           padding: '16px',
           borderRadius: '8px',
           background: 'rgba(255, 255, 255, 0.8)',
@@ -71,17 +71,21 @@ export default function HomePage() {
         }}>
           <Title level={3} style={{ textAlign: 'center', marginBottom: 6 }}>Производители</Title>
         </div>
+        <div style={{
+          //marginTop: 1,
+        }}>
           <Carousel
             autoplay
             infinite
-            slidesToShow={5}
+            slidesToShow={3}
             slidesToScroll={1}
             dots={true}
             arrows={true}
+            //marginTop={8}
             responsive={[
               {
                 breakpoint: 1200,
-                settings: { slidesToShow: 4, slidesToScroll: 1 }
+                settings: { slidesToShow: 3, slidesToScroll: 1 }
               },
               {
                 breakpoint: 992,
@@ -96,7 +100,12 @@ export default function HomePage() {
                 settings: { slidesToShow: 1, slidesToScroll: 1 }
               }
             ]}
-            style={{ padding: '0 20px' }}
+            style={{ 
+              padding: '0 30px',
+              color: 'rgba(0, 0, 0, 0.8)'
+              //borderRadius: '8px',
+              //background: 'rgba(255, 255, 255, 0.8)',
+             }}
           >
             {manufacturers.map(manufacturer => (
               <div key={manufacturer.id} style={{ padding: '0 8px' }}>
@@ -110,23 +119,29 @@ export default function HomePage() {
                     background: 'rgba(255, 255, 255, 0.7)',
                     borderRadius: '8px',
                     border: '1px solid #d9d9d9',
-                    transition: 'box-shadow 0.3s, transform 0.3s', // Добавим transition для transform
+                    transition: 'box-shadow 0.3s, transform 0.3s', //transition для transform
                     height: '160px', // Фиксируем высоту карточки для выравнивания
                     display: 'flex',
                     flexDirection: 'column',
                     justifyContent: 'center', // Центрируем содержимое по вертикали
+                    margin: '6px 4px',
                   }}
                   onMouseEnter={(e) => {
-                    e.currentTarget.style.boxShadow = '0 4px 8px rgba(0,0,0,0.1)';
-                    e.currentTarget.style.transform = 'scale(1.02)'; // Лёгкое увеличение при наведении
+                    e.currentTarget.style.boxShadow = '0 3px 3px 3px rgba(0, 225, 255, 0.64)';
+                    //e.currentTarget.style.borderRadius = '20px';
                   }}
                   onMouseLeave={(e) => {
                     e.currentTarget.style.boxShadow = 'none';
-                    e.currentTarget.style.transform = 'scale(1)'; // Возврат к исходному размеру
+                    //e.currentTarget.style.borderRadius = '8px';
                   }}
                 >
                   {/* Контейнер для логотипа */}
-                  <div style={{ height: '60px', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 8 }}>
+                  <div style={{ 
+                    height: '100%', 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    justifyContent: 'center', 
+                    marginBottom: 4 }}>
                     {manufacturer.logo ? (
                       <img
                         src={manufacturer.logo}
@@ -138,25 +153,26 @@ export default function HomePage() {
                     )}
                   </div>
                   {/* Название производителя */}
-                  <Typography.Text strong>{manufacturer.name}</Typography.Text>
+                  <Typography.Text strong style={{marginBottom: 4}}>{manufacturer.name}</Typography.Text>
                 </div>
               </div>
             ))}
           </Carousel>
+        </div>
         </div>
       )}
 
       {/* Заголовок */}
       <div style={{
           textAlign: 'center',
-          marginBottom: 32,
+          marginBottom: 16,
           padding: '16px',
           borderRadius: '8px',
           background: 'rgba(255, 255, 255, 0.8)',
           maxWidth: 'fit-content',
           margin: '0 auto',
         }}>
-          <Title level={2} style={{ margin: 0, marginBottom: 20, }}>
+          <Title level={2} style={{ margin: 0, marginBottom: 16, }}>
             Каталог товаров
           </Title>
           {/* Блок с фильтрами */}
@@ -195,12 +211,12 @@ export default function HomePage() {
 
       {/* Условие "Нет товаров" теперь зависит от filteredProducts */}
       {filteredProducts.length === 0 ? (
-        <Alert title="Нет товаров" description={products.length === 0 ? "Скоро появятся новые позиции" : "Нет товаров, соответствующих фильтрам"} type="info" showIcon style={{ margin: 24 }} />
+        <Alert title="Нет товаров" description={products.length === 0 ? "Скоро появятся новые позиции" : "Нет товаров, соответствующих фильтрам"} type="info" showIcon style={{ margin: 16 }} />
       ) : (
         <Row
           gutter={[24, 32]}
           justify="center"
-          style={{ marginTop: 32 }}
+          style={{ marginTop: 16 }}
         >
           {filteredProducts.map(product => ( // Отображаем filteredProducts вместо products
             <Col
@@ -219,7 +235,7 @@ export default function HomePage() {
                     .then(() => {
                       message.success('Товар добавлен в корзину');
                     })
-                    .catch(err => message.error(err.message || 'Не удалось добавить в корзину'));
+                    .catch(err => message.error('Не удалось добавить в корзину. Авторизуйтесь'));
                 }}
               />
             </Col>

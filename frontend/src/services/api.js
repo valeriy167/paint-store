@@ -115,6 +115,13 @@ export const api = {
       });
   },
 
+  getReviewsByProductId: (productId) => fetch(`${BASE_URL}/reviews/?product=${productId}`, getOptions()).then(response => {
+    if (!response.ok) {
+        throw new Error('Не удалось загрузить отзывы');
+    }
+    return response.json();
+  }),
+
   // Отправить отзыв (требует авторизации)
   postReview(data) {
     const token = localStorage.getItem('access');
@@ -436,6 +443,8 @@ export const api = {
     
   deleteManufacturer: (id) => fetch(`${BASE_URL}/manufacturers/${id}/`, deleteOptions()),
   getProductsByManufacturer: (manufacturerId) => fetch(`${BASE_URL}/products/?manufacturer_id=${manufacturerId}`, getOptions()).then(response => response.json()),
+
+  getProductById: (id) => fetch(`${BASE_URL}/products/${id}/`, getOptions()).then(response => response.json()),
 
 
 };

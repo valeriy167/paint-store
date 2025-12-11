@@ -10,6 +10,7 @@ import CartPage from './pages/CartPage';
 import AdminPanelPage from './pages/AdminPanelPage';
 import ProfilePage from './pages/ProfilePage';
 import ManufacturerPage from './pages/ManufacturerPage';
+import ProductPage from './pages/ProductPage';
 
 export default function App() {
   return (
@@ -45,6 +46,7 @@ export default function App() {
             } 
           />
           <Route path="/manufacturer/:manufacturerId" element={<ManufacturerPage />} />
+          <Route path="/product/:productId" element={<ProductPage />} />
           <Route path="*" element={<div>404 - Страница не найдена</div>} />
         </Routes>
       </Layout>

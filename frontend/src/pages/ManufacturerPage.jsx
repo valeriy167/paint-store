@@ -161,6 +161,7 @@ export default function ManufacturerPage() {
         <Row
           gutter={[24, 32]}
           justify="center"
+          style = {{ marginTop: 16}}
         >
           {filteredProducts.map(product => (
             <Col

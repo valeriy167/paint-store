@@ -35,7 +35,7 @@ export default function LoginPage() {
           name="login"
           layout="vertical"
           onFinish={onFinish}
-          initialValues={{ username: 'hello', password: '123' }}
+          //initialValues={{ username: 'hello', password: '123' }}
         >
           <Form.Item
             name="username"

@@ -21,10 +21,25 @@ export default function AdminPanelPage() {
 
   if (!user?.profile?.is_moderator) {
     return (
-      <div style={{ padding: 48, textAlign: 'center' }}>
+      <div 
+      style={{
+                textAlign: 'center',
+                marginBottom: 32,
+                padding: '16px',
+                borderRadius: '8px',
+                background: 'rgba(255, 255, 255, 0.8)',
+                maxWidth: 'fit-content',
+                margin: '0 auto',
+              }}>
         <Title level={3}>Доступ запрещён</Title>
         <p>Только администраторы могут управлять контентом.</p>
+        <img src={'https://media1.tenor.com/m/dhuQV_msfiUAAAAd/cat-gun.gif'}
+          style = {{ 
+            borderRadius: 8,
+           }}
+        ></img>
       </div>
+      
     );
   }
 
@@ -59,6 +74,7 @@ export default function AdminPanelPage() {
       </div>
 
       <Tabs
+        align="middle" 
         style={{ background: 'rgba(255, 255, 255, 0.8)', borderRadius: '8px', margin: '0 auto', marginTop: 32, marginLeft: 8}}
         defaultActiveKey="reviews"
         items={[
