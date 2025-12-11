@@ -6,6 +6,11 @@ const { Title, Text } = Typography;
 
 export default function ProductCard({ product, onAddToCart }) {
 
+  const imageUrl = product.images && product.images.length > 0 ? product.images[0].image : null;
+  const shortDescription = product.description.length > 80
+    ? product.description.slice(0, 80) + '...'
+    : product.description;
+
   return (
     <Card
       hoverable
@@ -26,10 +31,10 @@ export default function ProductCard({ product, onAddToCart }) {
             overflow: 'hidden',
             borderRadius: 8,
           }}>
-            {product.image_url ? (
+            {imageUrl ? (
               <img 
                 alt={product.name} 
-                src={product.image_url} 
+                src={imageUrl} 
                 style={{ 
                   maxWidth: '100%', 
                   maxHeight: '100%', 

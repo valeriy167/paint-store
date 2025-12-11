@@ -217,6 +217,7 @@ function ProductsTab() {
   const [loading, setLoading] = useState(true);
   const [form] = Form.useForm();
   const [editingProduct, setEditingProduct] = useState(null);
+  const [imageFileList, setImageFileList] = useState([]);
 
   // Загрузим список производителей при монтировании вкладки ProductsTab
   useEffect(() => {
@@ -238,14 +239,55 @@ function ProductsTab() {
       .finally(() => setLoading(false));
   }, []);
 
+  const uploadProps = {
+    multiple: true, // Разрешаем множественную загрузку
+    listType: 'picture', // Тип списка файлов
+    accept: 'image/*', // Принимаем только изображения
+    beforeUpload: (file) => {
+      const isImage = file.type.startsWith('image/');
+      if (!isImage) {
+        message.error('Вы можете загружать только изображения!');
+        return false; // Отменяем загрузку файла
+      }
+      // Возвращаем false, чтобы Ant Design не отправлял файл автоматически
+      // Загрузка будет происходить через formData в handleCreate/handleUpdate
+      return false;
+    },
+    fileList: imageFileList,
+    onChange: ({ fileList: newFileList }) => {
+      setImageFileList(newFileList);
+      // fileList содержит список файлов, которые пользователь выбрал/удалил
+      // Мы можем получить сами файлы из fileList и передать их в Form.Item
+      // Извлекаем File объекты из fileList и передаём в форму
+      const files = newFileList
+        .filter(file => file.originFileObj) // Только выбранные файлы
+        .map(file => file.originFileObj);
+      // Устанавливаем значение в форму
+      form.setFieldsValue({ new_images: files });
+    },
+    onRemove: (file) => {
+      // Обновляем fileList при удалении
+      const newFileList = imageFileList.filter(f => f.uid !== file.uid);
+      setImageFileList(newFileList);
+      // Обновляем значение в форме
+      const remainingFiles = newFileList
+        .filter(f => f.originFileObj)
+        .map(f => f.originFileObj);
+      form.setFieldsValue({ new_images: remainingFiles });
+    },
+  };
+
   const handleCreate = async (values) => {
     try {
       await api.createProduct(values);
       message.success('Товар добавлен');
       form.resetFields();
       setEditingProduct(null);
+      // Сбросим fileList изображений
+      setImageFileList([]);
       api.getProducts().then(setProducts);
     } catch (err) {
+      console.error("Ошибка создания товара:", err);
       message.error(err.message);
     }
   };
@@ -257,8 +299,11 @@ function ProductsTab() {
       message.success('Товар обновлён');
       setEditingProduct(null);
       form.resetFields();
+      // Сбросим fileList изображений
+      setImageFileList([]);
       api.getProducts().then(setProducts);
     } catch (err) {
+      console.error("Ошибка обновления товара:", err);
       message.error(err.message);
     }
   };
@@ -281,15 +326,23 @@ function ProductsTab() {
   const columns = [
     { title: 'ID', dataIndex: 'id', key: 'id', width: 60 },
     { 
-      title: 'Изображение', 
+      title: 'Изображения', 
       key: 'image',
-      render: (_, record) => record.image_url ? (
-        <img 
-          src={record.image_url} 
-          alt={record.name} 
-          style={{ width: 40, height: 40, objectFit: 'cover', borderRadius: 4 }}
-        />
-      ) : '—'
+      render: (_, record) => {
+        // Проверяем, есть ли поле images и массив ли он
+        if (record.images && Array.isArray(record.images) && record.images.length > 0) {
+          // Показываем первое изображение как миниатюру
+          return (
+            <Image
+              src={record.images[0].image} // Берём URL первого изображения
+              alt={record.name}
+              style={{ width: 40, height: 40, objectFit: 'cover', borderRadius: 4 }}
+              fallback="https://via.placeholder.com/40" // Заглушка
+            />
+          );
+        }
+        return '—'; // Если нет изображений
+      }
     },
     { title: 'Название', dataIndex: 'name', key: 'name' },
     { title: 'Цена', dataIndex: 'price', key: 'price' },
@@ -319,7 +372,7 @@ function ProductsTab() {
   ];
 
   return (
-    <Space direction="vertical" style={{ width: '100%' }}>
+    <Space orientation="vertical" style={{ width: '100%' }}>
       <Card title="Добавить / редактировать товар">
         <Form 
           form={form} 
@@ -353,8 +406,11 @@ function ProductsTab() {
               ))}
             </Select>
           </Form.Item>
-          <Form.Item name="image_url" label="Ссылка на изображение">
-            <Input placeholder="https://example.com/image.jpg  " />
+          <Form.Item name="new_images" label="Изображения товара" valuePropName={undefined} getValueFromEvent={undefined}>
+            {/* getValueFromEvent возвращает null, потому что мы управляем fileList вручную через onChange */}
+            <Upload {...uploadProps}>
+              <Button icon={<UploadOutlined />}>Загрузить изображения</Button>
+            </Upload>
           </Form.Item>
           <Form.Item>
             <Button 

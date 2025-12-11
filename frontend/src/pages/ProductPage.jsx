@@ -67,6 +67,8 @@ export default function ProductPage() {
     return <Alert title="Товар не найден" type="warning" showIcon style={{ margin: 24 }} />;
   }
 
+  const primaryImageUrl = product.images && product.images.length > 0 ? product.images[0].image : null;
+
   return (
     <div style={{ padding: '24px 0' }}>
       <Card
@@ -83,10 +85,10 @@ export default function ProductPage() {
             justifyContent: 'center',
             overflow: 'hidden'
           }}>
-            {product.image_url ? (
+            {primaryImageUrl ? (
               <img
                 alt={product.name}
-                src={product.image_url}
+                src={primaryImageUrl}
                 style={{
                   maxWidth: '100%',
                   maxHeight: '100%',
