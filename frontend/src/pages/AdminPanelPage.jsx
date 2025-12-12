@@ -217,28 +217,139 @@ function ProductsTab() {
   const [loading, setLoading] = useState(true);
   const [form] = Form.useForm();
   const [editingProduct, setEditingProduct] = useState(null);
+  // --- Состояние для fileList изображений ---
   const [imageFileList, setImageFileList] = useState([]);
+  // -----------------------------------------
 
-  // Загрузим список производителей при монтировании вкладки ProductsTab
+  // Загрузим список производителей и товаров при монтировании вкладки ProductsTab
   useEffect(() => {
-    api.getProducts()
-      .then(setProducts)
-      .catch(err => message.error(err.message))
-      .finally(() => setLoading(false));
-
-    // Загрузка производителей
-    api.getManufacturers()
-      .then(setManufacturersList)
-      .catch(err => console.error('Ошибка загрузки производителей для формы:', err));
+    const loadData = async () => {
+      try {
+        const [productsData, manufacturersData] = await Promise.all([
+          api.getProducts(),
+          api.getManufacturers()
+        ]);
+        setProducts(productsData);
+        setManufacturersList(manufacturersData);
+      } catch (err) {
+        message.error(err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadData();
   }, []);
 
-  useEffect(() => {
-    api.getProducts()
-      .then(setProducts)
-      .catch(err => message.error(err.message))
-      .finally(() => setLoading(false));
-  }, []);
+  // --- Обновлённые функции отправки ---
+  const handleCreateOrUpdate = async (isUpdate, values) => {
+    console.log("Полученные values в handleCreateOrUpdate:", values);
+    // Проверяем, есть ли файлы изображений
+    const hasNewImages = imageFileList.length > 0;
 
+    // Создаём FormData в любом случае для единообразия
+    const formData = new FormData();
+
+    // Добавляем все основные поля в formData
+    Object.keys(values).forEach(key => {
+      if (key !== 'new_images' && values[key] !== undefined) {
+        let valueToAdd = values[key];
+        // Особая обработка для price и других числовых полей, если нужно
+        // Но обычно Input type="number" возвращает строку, которую DRF сам парсит
+        // Проверим, не является ли значение null
+        if (valueToAdd === null) {
+          // Для числовых полей, которые могут быть null, передаём пустую строку
+          // или специальный маркер, в зависимости от настроек сериализатора
+          // Но для DecimalField с allow_null=True, пустая строка часто работает.
+          // Для обязательных полей, null быть не должно, если форма валидна.
+          formData.append(key, '');
+        } else {
+          // Для остальных случаев, включая числа и строки
+          formData.append(key, valueToAdd);
+        }
+      }
+    });
+
+    // Добавляем файлы изображений (берём их из состояния imageFileList)
+    imageFileList.forEach(fileObj => {
+      if (fileObj.originFileObj) { // Убедимся, что это файл, а не просто объект из предыдущего ответа
+        formData.append('new_images', fileObj.originFileObj);
+      }
+    });
+
+    // Выполняем запрос
+    try {
+      let response;
+      if (isUpdate && editingProduct) {
+        response = await api.updateProduct(editingProduct.id, formData); // formData, а не values
+        message.success('Товар обновлён');
+      } else {
+        response = await api.createProduct(formData); // formData, а не values
+        message.success('Товар добавлен');
+      }
+      form.resetFields();
+      setEditingProduct(null);
+      setImageFileList([]); // Сбрасываем fileList изображений
+      api.getProducts().then(setProducts);
+      return response;
+    } catch (err) {
+      console.error(`Ошибка ${isUpdate ? 'обновления' : 'создания'} товара:`, err);
+      // Попробуем получить детали ошибки из ответа
+      if (err.response && err.response.data) {
+          console.error("Детали ошибки:", err.response.data);
+          message.error(`Ошибка: ${JSON.stringify(err.response.data)}`);
+      } else {
+          message.error(err.message);
+      }
+      throw err; // Для корректной обработки в Form
+    }
+  };
+
+  const handleCreate = (values) => handleCreateOrUpdate(false, values);
+  const handleUpdate = (values) => handleCreateOrUpdate(true, values);
+  // ------------------------------------
+
+  const handleDelete = async (id) => {
+    try {
+      await api.deleteProduct(id);
+      message.success('Товар удалён');
+      // Обновим локальный список
+      setProducts(products.filter(p => p.id !== id));
+    } catch (err) {
+      message.error(err.message);
+    }
+  };
+
+  const startEditing = (product) => {
+    console.log("Product передан в startEditing:", product); // <-- Добавь этот лог
+    console.log("manufacturer_id в продукте:", product.manufacturer_id); // <-- И этот
+    setEditingProduct(product);
+    form.setFieldsValue(product);
+    setEditingProduct(product);
+    // // Устанавливаем значения формы
+    // form.setFieldsValue(product);
+    form.setFieldsValue({ manufacturer_id: undefined });
+
+    form.setFieldsValue({
+      ...product,
+    });
+    // Устанавливаем fileList изображений для Upload
+    if (product.images && Array.isArray(product.images)) {
+      // Формируем fileList для Upload из существующих изображений
+      // UID нужен для правильной работы Upload, если изображения уже были
+      const initialFileList = product.images.map((img, index) => ({
+        uid: `existing-${img.id}-${index}`, // Уникальный ID для существующего изображения
+        name: img.image.split('/').pop(), // Имя файла из URL
+        status: 'done', // Статус "загружено"
+        url: img.image, // URL существующего изображения
+        // originFileObj не нужно для уже загруженных файлов
+      }));
+      setImageFileList(initialFileList);
+    } else {
+      setImageFileList([]); // Если изображений нет, сбросим fileList
+    }
+  };
+
+  // --- Обновлённый uploadProps ---
   const uploadProps = {
     multiple: true, // Разрешаем множественную загрузку
     listType: 'picture', // Тип списка файлов
@@ -256,78 +367,20 @@ function ProductsTab() {
     fileList: imageFileList,
     onChange: ({ fileList: newFileList }) => {
       setImageFileList(newFileList);
-      // fileList содержит список файлов, которые пользователь выбрал/удалил
-      // Мы можем получить сами файлы из fileList и передать их в Form.Item
-      // Извлекаем File объекты из fileList и передаём в форму
-      const files = newFileList
-        .filter(file => file.originFileObj) // Только выбранные файлы
-        .map(file => file.originFileObj);
-      // Устанавливаем значение в форму
-      form.setFieldsValue({ new_images: files });
     },
     onRemove: (file) => {
       // Обновляем fileList при удалении
       const newFileList = imageFileList.filter(f => f.uid !== file.uid);
       setImageFileList(newFileList);
-      // Обновляем значение в форме
-      const remainingFiles = newFileList
-        .filter(f => f.originFileObj)
-        .map(f => f.originFileObj);
-      form.setFieldsValue({ new_images: remainingFiles });
     },
   };
-
-  const handleCreate = async (values) => {
-    try {
-      await api.createProduct(values);
-      message.success('Товар добавлен');
-      form.resetFields();
-      setEditingProduct(null);
-      // Сбросим fileList изображений
-      setImageFileList([]);
-      api.getProducts().then(setProducts);
-    } catch (err) {
-      console.error("Ошибка создания товара:", err);
-      message.error(err.message);
-    }
-  };
-
-  const handleUpdate = async (values) => {
-    if (!editingProduct) return;
-    try {
-      await api.updateProduct(editingProduct.id, values);
-      message.success('Товар обновлён');
-      setEditingProduct(null);
-      form.resetFields();
-      // Сбросим fileList изображений
-      setImageFileList([]);
-      api.getProducts().then(setProducts);
-    } catch (err) {
-      console.error("Ошибка обновления товара:", err);
-      message.error(err.message);
-    }
-  };
-
-  const handleDelete = async (id) => {
-    try {
-      await api.deleteProduct(id);
-      message.success('Товар удалён');
-      setProducts(products.filter(p => p.id !== id));
-    } catch (err) {
-      message.error(err.message);
-    }
-  };
-
-  const startEditing = (product) => {
-    setEditingProduct(product);
-    form.setFieldsValue(product);
-  };
+  // -----------------------------
 
   const columns = [
     { title: 'ID', dataIndex: 'id', key: 'id', width: 60 },
-    { 
-      title: 'Изображения', 
-      key: 'image',
+    {
+      title: 'Изображения',
+      key: 'images',
       render: (_, record) => {
         // Проверяем, есть ли поле images и массив ли он
         if (record.images && Array.isArray(record.images) && record.images.length > 0) {
@@ -345,6 +398,12 @@ function ProductsTab() {
       }
     },
     { title: 'Название', dataIndex: 'name', key: 'name' },
+    {
+      title: 'Производитель',
+      dataIndex: ['manufacturer', 'name'], // Путь к имени производителя
+      key: 'manufacturer_name',
+      render: (_, record) => record.manufacturer ? record.manufacturer.name : '—'
+    },
     { title: 'Цена', dataIndex: 'price', key: 'price' },
     { title: 'Остаток', dataIndex: 'stock', key: 'stock' },
     { title: 'Категория', dataIndex: 'category', key: 'category' },
@@ -353,14 +412,14 @@ function ProductsTab() {
       key: 'actions',
       render: (_, record) => (
         <Space>
-          <Button 
-            size="small" 
+          <Button
+            size="small"
             icon={<EditOutlined />}
             onClick={() => startEditing(record)}
           >
           </Button>
-          <Button 
-            danger 
+          <Button
+            danger
             size="small"
             icon={<DeleteOutlined />}
             onClick={() => handleDelete(record.id)}
@@ -372,11 +431,11 @@ function ProductsTab() {
   ];
 
   return (
-    <Space orientation="vertical" style={{ width: '100%' }}>
+    <Space direction="vertical" style={{ width: '100%' }}>
       <Card title="Добавить / редактировать товар">
-        <Form 
-          form={form} 
-          layout="vertical" 
+        <Form
+          form={form}
+          layout="vertical"
           onFinish={editingProduct ? handleUpdate : handleCreate}
         >
           <Form.Item name="name" label="Название" rules={[{ required: true, message: 'Укажите название' }]}>
@@ -399,33 +458,39 @@ function ProductsTab() {
               placeholder="Выберите производителя"
               allowClear
               showSearch
-              filterOption={(input, option) => option.children.toLowerCase().includes(input.toLowerCase())}
+              filterOption={(input, option) =>
+                option.children.toLowerCase().includes(input.toLowerCase())
+              }
             >
-              {manufacturersList.map(man => (
-                <Select.Option key={man.id} value={man.id}>{man.name}</Select.Option>
+              {manufacturersList.map((man) => (
+                <Select.Option key={man.id} value={man.id}>
+                  {man.name}
+                </Select.Option>
               ))}
             </Select>
           </Form.Item>
-          <Form.Item name="new_images" label="Изображения товара" valuePropName={undefined} getValueFromEvent={undefined}>
-            {/* getValueFromEvent возвращает null, потому что мы управляем fileList вручную через onChange */}
+          {/* --- Form.Item для изображений (убраны name, valuePropName, getValueFromEvent) --- */}
+          <Form.Item label="Изображения товара">
             <Upload {...uploadProps}>
               <Button icon={<UploadOutlined />}>Загрузить изображения</Button>
             </Upload>
           </Form.Item>
+          {/* ------------------------------- */}
           <Form.Item>
-            <Button 
-              type="primary" 
-              htmlType="submit" 
+            <Button
+              type="primary"
+              htmlType="submit"
               icon={editingProduct ? <EditOutlined /> : <PlusOutlined />}
             >
               {editingProduct ? 'Сохранить изменения' : 'Добавить товар'}
             </Button>
             {editingProduct && (
-              <Button 
+              <Button
                 style={{ marginLeft: 8 }}
                 onClick={() => {
                   setEditingProduct(null);
                   form.resetFields();
+                  setImageFileList([]); // Сбросим fileList при отмене редактирования
                 }}
               >
                 Отмена
@@ -447,6 +512,7 @@ function ProductsTab() {
     </Space>
   );
 }
+
 
 // === Вкладка: Контакты ===
 function ContactsTab() {

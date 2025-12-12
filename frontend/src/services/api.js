@@ -223,35 +223,24 @@ export const api = {
 
   // Создать товар
   createProduct: (data) => {
-    // Проверяем, есть ли файлы изображений в data.new_images
-    const hasNewImages = data.new_images && Array.isArray(data.new_images) && data.new_images.length > 0;
-    if (hasNewImages) {
-        // Если есть файлы, используем FormData
-        const formData = new FormData();
-        // Добавляем основные поля
-        for (const key in data) {
-            if (key !== 'new_images' && data[key] !== undefined) {
-                // Для массивов (например, many-to-many) или файлов может потребоваться особая обработка
-                if (Array.isArray(data[key])) {
-                    // Если поле - массив, нужно добавить несколько значений с одинаковым ключом
-                    data[key].forEach(value => formData.append(key, value));
-                } else {
-                    formData.append(key, data[key]);
-                }
-            }
+    // data должен быть FormData, если используются изображения
+    const isFormData = data instanceof FormData;
+    return fetch(`${BASE_URL}/products/`, {
+        method: 'POST',
+        // Для FormData заголовок Content-Type не устанавливается вручную
+        headers: isFormData ? getAuthHeaders() : { 'Content-Type': 'application/json', ...getAuthHeaders() },
+        body: isFormData ? data : JSON.stringify(data)
+    }).then(response => {
+        if (!response.ok) {
+            // ВАЖНО: Получаем тело ответа для анализа ошибки
+            return response.json().then(errorData => {
+                console.error("Ошибка создания товара (Response Body):", errorData); // Лог в консоль
+                // Бросаем ошибку с сообщением из тела ответа
+                throw new Error(`Не удалось создать товар: ${JSON.stringify(errorData)}`);
+            });
         }
-        // Добавляем файлы изображений
-        data.new_images.forEach(file => {
-            formData.append('new_images', file); // Используем имя поля 'new_images' как в сериализаторе
-        });
-        return fetch(`${BASE_URL}/products/`, postOptions(formData, true)).then(response => response.json());
-    } else {
-        // Если файлов нет, можно использовать JSON
-        return fetch(`${BASE_URL}/products/`, postOptions(data)).then(res => {
-            if (!res.ok) throw new Error('Не удалось создать товар');
-            return res.json();
-        });
-    }
+        return response.json();
+    });
   },
 
   // Обновить контакты
@@ -283,34 +272,24 @@ export const api = {
 
   // Обновить товар
   updateProduct: (id, data) => {
-    // Аналогично createProduct
-    const hasNewImages = data.new_images && Array.isArray(data.new_images) && data.new_images.length > 0;
-    if (hasNewImages) {
-        const formData = new FormData();
-        for (const key in data) {
-            if (key !== 'new_images' && data[key] !== undefined) {
-                if (Array.isArray(data[key])) {
-                    data[key].forEach(value => formData.append(key, value));
-                } else {
-                    formData.append(key, data[key]);
-                }
-            }
+    // data должен быть FormData, если используются изображения
+    const isFormData = data instanceof FormData;
+    return fetch(`${BASE_URL}/products/${id}/`, {
+        method: 'PUT', // или PATCH, если вы хотите частичное обновление
+        // Для FormData заголовок Content-Type не устанавливается вручную
+        headers: isFormData ? getAuthHeaders() : { 'Content-Type': 'application/json', ...getAuthHeaders() },
+        body: isFormData ? data : JSON.stringify(data)
+    }).then(response => {
+        if (!response.ok) {
+            // ВАЖНО: Получаем тело ответа для анализа ошибки
+            return response.json().then(errorData => {
+                console.error("Ошибка обновления товара (Response Body):", errorData); // Лог в консоль
+                // Бросаем ошибку с сообщением из тела ответа
+                throw new Error(`Не удалось обновить товар: ${JSON.stringify(errorData)}`);
+            });
         }
-        data.new_images.forEach(file => {
-            formData.append('new_images', file);
-        });
-        return fetch(`${BASE_URL}/products/${id}/`, putOptions(formData, true)).then(response => response.json());
-    } else {
-        // Для частичного обновления без файлов можно использовать PATCH и JSON
-        // или PUT с JSON, если не передаются новые файлы
-        // Но для единообразия можно всегда использовать FormData, даже если new_images пустой
-        // Однако, если new_images не передаётся вообще, JSON может быть проще.
-        // Для простоты, если new_images нет или пустой, используем JSON.
-        return fetch(`${BASE_URL}/products/${id}/`, putOptions(data)).then(res => {
-            if (!res.ok) throw new Error('Не удалось обновить товар');
-            return res.json();
-        });
-    }
+        return response.json();
+    });
   },
 
   // Отклонить отзыв (удалить)
