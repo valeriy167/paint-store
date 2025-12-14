@@ -169,13 +169,14 @@ export default function CartPage() {
             style={{ marginTop: 32 }}
             dataSource={cart.items}
             renderItem={item => (
-              <List.Item>
+              <List.Item key={item.id}>
                 <Card style={{ width: '100%' }}>
                   <div style={{ display: 'flex', gap: 24, alignItems: 'center' }}>
+                    {console.log("CartPage Item Rendered:", item)}
                     <div style={{ width: 100, height: 80, backgroundColor: '#f5f5f5', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                      {item.product_image ? (
+                      {item.product && Array.isArray(item.product.images) && item.product.images.length > 0 ? (
                             <img
-                            src={item.product_image}
+                            src={item.product.images[0].image}
                             alt={item.product_name}
                             style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }}
                             />

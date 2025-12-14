@@ -14,7 +14,7 @@ class ProductViewSet(viewsets.ModelViewSet):
 
     def get_permissions(self):
         # Публично: только чтение
-        if self.action in ['list', 'retrieve']:
+        if self.action in ['list', 'retrieve', 'info']:
             return [AllowAny()]  
         # Редактирование: только модераторы
         return [IsModerator()]
@@ -37,7 +37,7 @@ class ManufacturerViewSet(viewsets.ModelViewSet):
         Instantiates and returns the list of permissions that this view requires.
         """
         # Для действий, связанных с чтением (list, retrieve), разрешаем всем
-        if self.action in ['list', 'retrieve']:
+        if self.action in ['list', 'retrieve', 'info']:
             permission_classes = [AllowAny]
         # Для остальных действий (create, update, partial_update, destroy) - только модераторы
         else:
